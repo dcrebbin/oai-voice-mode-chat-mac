@@ -146,7 +146,7 @@ class ToolbarDelegate: NSObject, NSToolbarDelegate {
         switch itemIdentifier.rawValue {
         case "CustomTitle":
             let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-            item.label = "ChatGPT"
+            item.label = "ChatGPT Voice Mode Chat"
             return item
 
         default:

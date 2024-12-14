@@ -5,12 +5,19 @@ import SwiftUI
 struct ContentView: View {
 
     @State private var messages: [String] = []
+    @State private var message: String = ""
 
+    @State private var authToken: String = ""
     var body: some View {
         ZStack(alignment: .top) {
             VisualEffectView(material: .hudWindow)
                 .edgesIgnoringSafeArea(.all)
             VStack(alignment: .leading, spacing: 0) {
+                Text("Auth Token").bold().padding(.all, 4)
+                SecureField("", text: $authToken)
+                    .padding(.all, 4)
+                    .textFieldStyle(.roundedBorder)
+
                 ScrollView {
                     FlowLayout(spacing: 4) {
                         ForEach(messages, id: \.self) { message in
@@ -26,6 +33,7 @@ struct ContentView: View {
                     .padding(.horizontal, 8)
                 }
             }
+            .padding(.all, 6)
             .frame(maxWidth: .infinity, minHeight: 250, maxHeight: .infinity)
             .background(Color.clear)
         }
