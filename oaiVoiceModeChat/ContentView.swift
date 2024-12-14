@@ -143,6 +143,7 @@ struct AppMessage {
     let text: String
     let isUser: Bool
     let id: String
+    let createTime: Double?
 }
 
 struct ContentView: View {
@@ -154,6 +155,8 @@ struct ContentView: View {
     @State private var isListening: Bool = false
     @State private var onLatestConversation: Bool = false
     @State private var retrievalSpeed: Int = 3
+
+    @State private var messageIds: [String] = []
 
     func userMessage(message: AppMessage) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
@@ -303,23 +306,23 @@ struct ContentView: View {
                         let author = value.message?.author
                         let content = value.message?.content?.parts?.first
 
-                        print(
-                            "\(String(describing: messageId)), \(String(describing: author))  \(String(describing: content))"
-                        )
-                        if author?.role != "system" {
+                        if author?.role != "system" && messageId != nil
+                            && !messageIds.contains(messageId ?? "") && content != nil
+                        {
+                            print(
+                                "\(String(describing: messageId)), \(String(describing: author))  \(String(describing: content))"
+                            )
+
+                            let isUser = author?.role == "user"
                             if case .string(let messageText) = content {
-                                let isUser = author?.role == "user"
-                                messages.append(
+                                messages.insert(
                                     AppMessage(
-                                        text: messageText, isUser: isUser, id: messageId ?? ""))
-                            } else if case .contentPart(let contentPart) = content,
-                                let messageText = contentPart.text
-                            {
-                                let isUser = author?.role == "user"
-                                messages.append(
-                                    AppMessage(
-                                        text: messageText, isUser: isUser, id: messageId ?? ""))
+                                        text: messageText, isUser: isUser, id: messageId ?? "",
+                                        createTime: value.message?.create_time),
+                                    at: 0)
                             }
+
+                            messageIds.append(messageId ?? "")
                         }
 
                     }
@@ -348,7 +351,6 @@ struct ContentView: View {
                         .padding(.all, 4)
                         .textFieldStyle(.roundedBorder)
                         .onChange(of: authToken) { oldValue, newValue in
-                            //save to app settings
                             UserDefaults.standard.set(newValue, forKey: "authToken")
                         }
                     Button(action: toggleListening) {
@@ -361,7 +363,7 @@ struct ContentView: View {
                                 }
                             }()
                         )
-                        .font(.system(size: 20))  // Made icon bigger
+                        .font(.system(size: 20))
                         .scaledToFill()
                         .padding(isListening ? 0 : 4)
                     }
@@ -369,7 +371,10 @@ struct ContentView: View {
                 }.frame(height: 40)
                 Divider()
                 ScrollView {
-                    ForEach(messages, id: \.text) { message in
+                    ForEach(
+                        messages.sorted(by: { ($0.createTime ?? 0) < ($1.createTime ?? 0) }),
+                        id: \.text
+                    ) { message in
                         if message.isUser {
                             userMessage(message: message)
                         } else {
