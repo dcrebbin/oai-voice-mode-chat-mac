@@ -15,6 +15,9 @@ struct ContentView: View {
     ]
 
     @State private var authToken: String = ""
+    @State private var isListening: Bool = false
+    @State private var onLatestConversation: Bool = false
+    @State private var retrievalSpeed: Int = 3
 
     func userMessage(message: Message) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
@@ -45,16 +48,58 @@ struct ContentView: View {
         .frame(minWidth: 40, maxWidth: .infinity, minHeight: 40, alignment: .leading)
     }
 
+    func toggleListening() {
+        isListening.toggle()
+        if isListening {
+            startListening()
+        } else {
+            stopListening()
+        }
+    }
+
+    @State private var timer: Timer?
+
+    func startListening() {
+        print("Starting listening")
+        timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(retrievalSpeed), repeats: true)
+        { _ in
+            print("Still listening...")
+        }
+    }
+
+    func stopListening() {
+        print("Stopping listening")
+        timer?.invalidate()
+        timer = nil
+    }
+
     var body: some View {
         ZStack(alignment: .top) {
             VisualEffectView(material: .hudWindow)
                 .edgesIgnoringSafeArea(.all)
             VStack(alignment: .leading, spacing: 0) {
                 Text("Auth Token").bold().padding(.all, 4)
-                SecureField("", text: $authToken)
-                    .padding(.all, 4)
-                    .textFieldStyle(.roundedBorder)
-
+                HStack {
+                    SecureField("", text: $authToken)
+                        .padding(.all, 4)
+                        .textFieldStyle(.roundedBorder)
+                    Button(action: toggleListening) {
+                        Image(
+                            systemName: {
+                                if isListening {
+                                    return "speaker.slash.fill"
+                                } else {
+                                    return "speaker.wave.2.fill"
+                                }
+                            }()
+                        )
+                        .font(.system(size: 20))  // Made icon bigger
+                        .scaledToFill()
+                        .padding(isListening ? 4 : 0)
+                    }
+                    .buttonStyle(.borderless)
+                }.frame(height: 40)
+                Divider()
                 ScrollView {
                     ForEach(messages, id: \.text) { message in
                         if message.isUser {
