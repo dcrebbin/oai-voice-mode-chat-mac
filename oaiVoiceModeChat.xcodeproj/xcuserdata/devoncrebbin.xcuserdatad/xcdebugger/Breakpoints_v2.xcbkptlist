@@ -16,7 +16,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "300"
             endingLineNumber = "300"
-            landmarkName = "retrieveMessagesFromConversation(conversationId:)"
+            landmarkName = "retrieveLatestConversation()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -32,7 +32,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "298"
             endingLineNumber = "298"
-            landmarkName = "retrieveMessagesFromConversation(conversationId:)"
+            landmarkName = "retrieveLatestConversation()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -48,7 +48,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "297"
             endingLineNumber = "297"
-            landmarkName = "retrieveMessagesFromConversation(conversationId:)"
+            landmarkName = "retrieveLatestConversation()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

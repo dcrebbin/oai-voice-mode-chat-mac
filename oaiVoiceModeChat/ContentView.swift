@@ -179,10 +179,11 @@ struct ContentView: View {
                 .background(Color.black)
                 .overlay(Circle().stroke(Color.white.opacity(0.5), lineWidth: 2))
                 .clipShape(Circle())
-            Text(message.text)
+            Text(.init(convertStringToMarkdown(message: message.text)))
                 .font(.system(size: 16))
                 .padding(.horizontal, 13)
                 .padding(.vertical, 8)
+                .textSelection(.enabled)
         }
         .frame(minWidth: 40, maxWidth: .infinity, minHeight: 40, alignment: .leading)
     }
@@ -207,6 +208,61 @@ struct ContentView: View {
         //     print("Still listening...")
         //     retrieveLatestConversation()
         // }
+    }
+
+    func convertStringToMarkdown(message: String) -> String {
+        var markdown = message
+
+        // Convert bold: **text** or __text__
+        markdown = markdown.replacingOccurrences(
+            of: "(\\*\\*|__)(.+?)(\\*\\*|__)",
+            with: "**$2**",
+            options: .regularExpression
+        )
+
+        // Convert italic: *text* or _text_
+        markdown = markdown.replacingOccurrences(
+            of: "(?<!\\*)(\\*|_)(?!\\*)(.*?)(?<!\\*)(\\*|_)(?!\\*)",
+            with: "*$2*",
+            options: .regularExpression
+        )
+
+        // Convert code blocks: ```text```
+        markdown = markdown.replacingOccurrences(
+            of: "```([\\s\\S]*?)```",
+            with: "```\n$1\n```",
+            options: .regularExpression
+        )
+
+        // Convert inline code: `text`
+        markdown = markdown.replacingOccurrences(
+            of: "`([^`]+)`",
+            with: "`$1`",
+            options: .regularExpression
+        )
+
+        // Convert links: [text](url)
+        markdown = markdown.replacingOccurrences(
+            of: "\\[([^\\]]+)\\]\\(([^\\)]+)\\)",
+            with: "[$1]($2)",
+            options: .regularExpression
+        )
+
+        // Convert bullet lists: * text or - text
+        markdown = markdown.replacingOccurrences(
+            of: "^[\\s]*(\\*|-)[\\s]+(.+)$",
+            with: "• $2",
+            options: [.regularExpression]
+        )
+
+        // Convert numbered lists: 1. text
+        markdown = markdown.replacingOccurrences(
+            of: "^[\\s]*\\d+\\.[\\s]+(.+)$",
+            with: "1. $1",
+            options: [.regularExpression]
+        )
+
+        return markdown
     }
 
     func retrieveLatestConversation() {
