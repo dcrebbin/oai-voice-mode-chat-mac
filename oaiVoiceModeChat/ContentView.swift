@@ -37,7 +37,8 @@ struct ContentView: View {
         Message(text: "Hey, Devon! How’s it going?", isUser: false),
     ]
 
-    @State private var authToken: String = ""
+    @State private var authToken: String =
+        UserDefaults.standard.string(forKey: "authToken") ?? ""
     @State private var isListening: Bool = false
     @State private var onLatestConversation: Bool = false
     @State private var retrievalSpeed: Int = 3
@@ -163,6 +164,10 @@ struct ContentView: View {
                     SecureField("", text: $authToken)
                         .padding(.all, 4)
                         .textFieldStyle(.roundedBorder)
+                        .onChange(of: authToken) { oldValue, newValue in
+                            //save to app settings
+                            UserDefaults.standard.set(newValue, forKey: "authToken")
+                        }
                     Button(action: toggleListening) {
                         Image(
                             systemName: {
