@@ -7,6 +7,29 @@ struct Message {
     let isUser: Bool
 }
 
+struct ConversationItem: Decodable {
+    let id: String
+    let title: String
+    let create_time: String
+    let update_time: String
+    let mapping: String?
+    let current_node: String?
+    let conversation_template_id: String?
+    let gizmo_id: String?
+    let is_archived: Bool
+    let is_starred: Bool?
+    let is_unread: Bool
+    let workspace_id: String?
+    let async_status: String?
+    let safe_urls: [String]
+    let conversation_origin: String?
+    let snippet: String?
+}
+
+struct ConversationHistory: Decodable {
+    let items: [ConversationItem]
+}
+
 struct ContentView: View {
 
     @State private var messages: [Message] = [
@@ -61,10 +84,67 @@ struct ContentView: View {
 
     func startListening() {
         print("Starting listening")
+        retrieveLatestConversation()
         timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(retrievalSpeed), repeats: true)
         { _ in
             print("Still listening...")
+            retrieveLatestConversation()
         }
+    }
+
+    func retrieveLatestConversation() {
+        if authToken == "" {
+            print("No OpenAI key found")
+            return
+        }
+
+        let url = URL(
+            string: "https://chatgpt.com/backend-api/conversations?offset=0&limit=1&order=updated")!
+
+        let headers = [
+            "Content-Type": "application/json",
+            "Authorization": "Bearer \(authToken)",
+        ]
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.allHTTPHeaderFields = headers
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data, error == nil else {
+                print("Error: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
+            do {
+                let decoder = JSONDecoder()
+                let conversationHistory = try decoder.decode(ConversationHistory.self, from: data)
+
+                if let firstItem = conversationHistory.items.first {
+                    let conversationId = firstItem.id
+                    let content = firstItem.snippet ?? ""
+                    let formatter = ISO8601DateFormatter()
+                    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                    let conversationCreatedTime = formatter.date(from: firstItem.create_time)
+                    let currentTime = Date()
+                    print(
+                        "Time since last conversation: \(currentTime.timeIntervalSince(conversationCreatedTime!)) seconds"
+                    )
+
+                    if currentTime.timeIntervalSince(conversationCreatedTime!) > 30 {
+                        print("Conversation is too old")
+                    } else {
+                        print("Conversation is new")
+                        print("Conversation content: \(content)")
+                        print("Conversation id: \(conversationId)")
+                    }
+
+                }
+
+            } catch {
+                print("Failed to decode conversation: \(error)")
+            }
+        }
+        task.resume()
     }
 
     func stopListening() {
@@ -87,15 +167,15 @@ struct ContentView: View {
                         Image(
                             systemName: {
                                 if isListening {
-                                    return "speaker.slash.fill"
-                                } else {
                                     return "speaker.wave.2.fill"
+                                } else {
+                                    return "speaker.slash.fill"
                                 }
                             }()
                         )
                         .font(.system(size: 20))  // Made icon bigger
                         .scaledToFill()
-                        .padding(isListening ? 4 : 0)
+                        .padding(isListening ? 0 : 4)
                     }
                     .buttonStyle(.borderless)
                 }.frame(height: 40)
