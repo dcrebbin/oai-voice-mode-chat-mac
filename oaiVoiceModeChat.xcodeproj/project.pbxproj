@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		E75A1A0D2CFDF82F00F8F75D /* .env in Resources */ = {isa = PBXBuildFile; fileRef = E75A1A0C2CFDF82C00F8F75D /* .env */; };
+		E76654372D0D80EA00C242C7 /* HighlightedTextEditor in Frameworks */ = {isa = PBXBuildFile; productRef = E76654362D0D80EA00C242C7 /* HighlightedTextEditor */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E76654372D0D80EA00C242C7 /* HighlightedTextEditor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +133,7 @@
 			);
 			name = oaiVoiceModeChat;
 			packageProductDependencies = (
+				E76654362D0D80EA00C242C7 /* HighlightedTextEditor */,
 			);
 			productName = oaiVoiceModeChat;
 			productReference = E75A19C02CFDCE6F00F8F75D /* oaiVoiceModeChat.app */;
@@ -214,6 +217,9 @@
 			);
 			mainGroup = E75A19B72CFDCE6F00F8F75D;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E76654352D0D80EA00C242C7 /* XCRemoteSwiftPackageReference "HighlightedTextEditor" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E75A19C12CFDCE6F00F8F75D /* Products */;
 			projectDirPath = "";
@@ -424,7 +430,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = oaiVoiceModeChat/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = ChatGPT;
+				INFOPLIST_KEY_CFBundleDisplayName = "ChatGPT: Voice Mode Chat";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -457,7 +463,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = oaiVoiceModeChat/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "oaiVoiceModeChat Transliterate";
+				INFOPLIST_KEY_CFBundleDisplayName = "ChatGPT: Voice Mode Chat";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -581,6 +587,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E76654352D0D80EA00C242C7 /* XCRemoteSwiftPackageReference "HighlightedTextEditor" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kyle-n/HighlightedTextEditor";
+			requirement = {
+				kind = exactVersion;
+				version = 2.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E76654362D0D80EA00C242C7 /* HighlightedTextEditor */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E76654352D0D80EA00C242C7 /* XCRemoteSwiftPackageReference "HighlightedTextEditor" */;
+			productName = HighlightedTextEditor;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E75A19B82CFDCE6F00F8F75D /* Project object */;
 }
