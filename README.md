@@ -6,6 +6,8 @@ Adds realtime chat for voice mode to allow you to copy code and read what was sa
 
 (Which is unsupported within any official Voice Mode experience in ChatGPT: and can only be accessed if you end the call or manually refresh the ChatGPT website)
 
+Video Demo: https://www.youtube.com/watch?v=0gRkIgAmMEU
+
 ![Example](/example.png)
 
 Xcode: 16.0 (min 15.0)
