@@ -1,4 +1,4 @@
-# Realtime Chat for Voice Mode [Unofficial]
+# Realtime Chat for Voice Mode (Mac) [Unofficial]
 
 NOTE: This is not a product from or afilitated with [OpenAI](https://openai.com)
 
@@ -9,6 +9,10 @@ Adds realtime chat for voice mode to allow you to copy code and read what was sa
 Video Demo: https://www.youtube.com/watch?v=0gRkIgAmMEU
 
 ![Example](/example.png)
+
+Other platforms:
+- Vscode Extension: https://github.com/dcrebbin/real-time-voice-chat-vscode (Unfinished)
+- Chrome Extension: https://github.com/dcrebbin/voice-mode-real-time-chat-extension
 
 Xcode: 16.0 (min 15.0)
 
