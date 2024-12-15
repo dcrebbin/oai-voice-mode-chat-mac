@@ -661,6 +661,16 @@ struct ContentView: View {
                         .padding(isListening ? 0 : 4)
                     }
                     .buttonStyle(.borderless)
+                    if !conversationId.isEmpty {
+                        Button(action: {
+                            print("Clear conversation")
+                            messages = []
+                            conversationId = ""
+                            conversationTitle = ""
+                        }) {
+                            Image(systemName: "clear")
+                        }
+                    }
                 }.frame(height: 40)
                 Divider()
                 if !conversationId.isEmpty {
@@ -673,9 +683,7 @@ struct ContentView: View {
                 } else {
                     VStack(alignment: .center) {
                         Text(
-                            isListening
-                                ? "Searching for conversation created in the last 30 seconds..."
-                                : "No conversation selected"
+                            "Searching for conversation created in the last 30 seconds..."
                         ).padding(.all, 4)
                     }
                 }
@@ -684,6 +692,9 @@ struct ContentView: View {
                 ScrollView {
                     ScrollViewReader { proxy in
                         LazyVStack {
+                            if messages.isEmpty {
+                                Text("No conversation selected").padding(.all, 4)
+                            }
                             ForEach(
                                 messages.sorted(by: { ($0.createTime ?? 0) < ($1.createTime ?? 0) }
                                 ),

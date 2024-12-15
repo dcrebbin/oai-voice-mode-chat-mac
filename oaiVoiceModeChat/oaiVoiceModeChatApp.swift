@@ -86,24 +86,6 @@ struct oaiVoiceModeChatApp: App {
     }
 }
 
-struct TranslucentWindowModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .background(
-                WindowAccessor { window in
-                    guard let window = window else { return }
-                    window.level = .floating
-                    let customToolbar: NSToolbar = NSToolbar(identifier: "MainToolbar")
-                    window.setContentSize(NSSize(width: 400, height: 200))
-                    window.appearance = NSAppearance(named: .vibrantDark)
-                    window.titlebarAppearsTransparent = true
-                    window.isMovableByWindowBackground = true
-                    window.toolbar = customToolbar
-                }
-            )
-    }
-}
-
 struct WindowAccessor: NSViewRepresentable {
     let callback: (NSWindow?) -> Void
 
@@ -144,20 +126,38 @@ class ToolbarDelegate: NSObject, NSToolbarDelegate {
         willBeInsertedIntoToolbar flag: Bool
     ) -> NSToolbarItem? {
         switch itemIdentifier.rawValue {
-        case "CustomTitle":
+        case "Button":
             let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-            item.label = "ChatGPT Voice Mode Chat"
+            item.image = NSImage(named: NSImage.Name("gear"))
+            item.image?.size = NSSize(width: 24.0, height: 24.0)
+            item.target = ToolbarDelegate.shared
+            item.action = #selector(ToolbarDelegate.shared.toggleWindow)
             return item
-
         default:
             return nil
         }
     }
 
+    //create and show settings window
+    func showSettingsWindow() {
+        let settingsWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 450, height: 440),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered,
+            defer: false)
+        settingsWindow.center()
+        settingsWindow.makeKeyAndOrderFront(nil)
+        settingsWindow.level = .floating
+        settingsWindow.titlebarAppearsTransparent = true
+        settingsWindow.isMovableByWindowBackground = true
+        settingsWindow.toolbar = NSToolbar(identifier: "SettingsToolbar")
+        settingsWindow.toolbar?.delegate = ToolbarDelegate.shared
+        settingsWindow.contentView = NSHostingView(rootView: SettingsView())
+        settingsWindow.makeKeyAndOrderFront(nil)
+    }
+
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
         [
-            NSToolbarItem.Identifier("CustomTitle"),
-            .flexibleSpace,
+            NSToolbarItem.Identifier("Button")
         ]
     }
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
