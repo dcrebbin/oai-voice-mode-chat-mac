@@ -87,8 +87,8 @@ struct ContentView: View {
                                 code.replacingOccurrences(
                                     of: "```\\w*\\n?", with: "", options: .regularExpression)),
                             highlightRules:
-                            Constants.HIGHLIGHT_RULES
-                            
+                                Constants.HIGHLIGHT_RULES
+
                         )
                         .frame(height: CGFloat(code.components(separatedBy: .newlines).count) * 20)
                     }
@@ -364,21 +364,22 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 0) {
                 TabView {
                     VStack(alignment: .leading) {
-                        HStack {
-                            Text("Retrieve latest conversations:").padding(.leading, 10)
+                        HStack(alignment: .center) {
+                            Text("Retrieve latest conversations").padding(.leading, 10).frame(maxWidth:.infinity)
                             Button(action: toggleListening) {
                                 Image(
                                     systemName: {
                                         if isListening {
-                                            return "speaker.wave.2.fill"
+                                            return "waveform"
                                         } else {
-                                            return "speaker.slash.fill"
+                                            return "waveform.slash"
                                         }
                                     }()
                                 )
                                 .font(.system(size: 20))
-                                .scaledToFill()
-                                .padding(isListening ? 0 : 4)
+                                .scaledToFit()
+                                .padding(.all,4)
+                                .padding(.vertical,isListening ? 1:0)
                             }
                             .buttonStyle(.borderless)
                             if !conversationId.isEmpty {
@@ -392,8 +393,18 @@ struct ContentView: View {
                                     Image(systemName: "clear")
                                 }
                             }
-                        }.frame(height: 40)
-                        Divider()
+                        }
+                        .padding(.all, 4)
+                        .background(.gray.opacity(0.1))                        
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                        )
+                        .cornerRadius(10)
+                        .padding(4)
+                        .frame(maxWidth: .infinity, maxHeight: 40)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top,4)
                         if !conversationId.isEmpty {
                             VStack(alignment: .leading) {
                                 Text("ID").font(.system(size: 12)).bold()
