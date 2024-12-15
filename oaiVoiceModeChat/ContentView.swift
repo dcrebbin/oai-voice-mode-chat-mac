@@ -158,7 +158,7 @@ struct ContentView: View {
     @State private var retrievalSpeed: Int = 3
 
     @State private var messageIds: [String] = []
-    @State private var conversationId: String = "675d127e-77dc-8004-99b8-bf077cd7876b"
+    @State private var conversationId: String = ""
     @State private var conversationTitle: String = ""
     @State private var scrollProxy: ScrollViewProxy?
 
@@ -411,15 +411,21 @@ struct ContentView: View {
 
     func startListening() {
         print("Starting listening")
-        // retrieveLatestConversation()
-        retrieveMessagesFromConversation()
+        retrieveLatestConversation()
 
         timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(retrievalSpeed), repeats: true)
         { _ in
-            print("Still listening...")
-            retrieveMessagesFromConversation()
-
-            // retrieveMessagesFromConversation()
+            if conversationId != "" {
+                print("Still retrieving latest messages...")
+                DispatchQueue.main.async {
+                    retrieveMessagesFromConversation()
+                }
+            } else {
+                print("Retrieving latest conversation...")
+                DispatchQueue.main.async {
+                    retrieveLatestConversation()
+                }
+            }
         }
     }
 
@@ -506,22 +512,34 @@ struct ContentView: View {
                 let conversationHistory = try decoder.decode(ConversationHistory.self, from: data)
 
                 if let firstItem = conversationHistory.items.first {
-                    let conversationId = firstItem.id
-                    let content = firstItem.snippet ?? ""
+                    _ = firstItem.snippet ?? ""
                     let formatter = ISO8601DateFormatter()
                     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                    let conversationCreatedTime = formatter.date(from: firstItem.create_time)
-                    let currentTime = Date()
+                    guard let utcTime = formatter.date(from: firstItem.update_time) else {
+                        print("Failed to parse conversation time")
+                        return
+                    }
+
+                    // Both times in UTC for accurate comparison
+                    let currentTimeUTC = Date()
+
+                    print(currentTimeUTC)
+                    print(utcTime)
+
                     print(
-                        "Time since last conversation: \(currentTime.timeIntervalSince(conversationCreatedTime!)) seconds"
+                        "Time since last conversation: \(currentTimeUTC.timeIntervalSince(utcTime)) seconds"
                     )
 
-                    if currentTime.timeIntervalSince(conversationCreatedTime!) > 30 {
+                    print(firstItem.title)
+                    if currentTimeUTC.timeIntervalSince(utcTime) > 30 {
                         print("Conversation is too old")
                     } else {
                         print("Conversation is new")
+                        conversationId = firstItem.id ?? ""
+                        DispatchQueue.main.async {
+                            retrieveMessagesFromConversation()
+                        }
                     }
-
                 }
 
             } catch {
@@ -536,6 +554,8 @@ struct ContentView: View {
             print("No OpenAI key found")
             return
         }
+
+        print("Retrieving messages from conversation: \(conversationId)")
 
         let url = URL(
             string: "https://chatgpt.com/backend-api/conversation/\(conversationId)")!
@@ -583,9 +603,15 @@ struct ContentView: View {
                                         createTime: value.message?.create_time),
                                     at: 0)
                             }
-
+                            if case .contentPart(let contentPart) = content {
+                                let text = contentPart.text ?? "N/A"
+                                messages.insert(
+                                    AppMessage(
+                                        text: text, isUser: isUser, id: messageId ?? "",
+                                        createTime: value.message?.create_time),
+                                    at: 0)
+                            }
                             messageIds.append(messageId ?? "")
-                            // scroll to bottom
                         }
 
                     }
@@ -595,8 +621,6 @@ struct ContentView: View {
             }
 
             DispatchQueue.main.async {
-
-                // After messages are updated, scroll to bottom
                 scrollProxy?.scrollTo("bottom", anchor: .bottom)
             }
         }
@@ -614,7 +638,7 @@ struct ContentView: View {
             VisualEffectView(material: .hudWindow)
                 .edgesIgnoringSafeArea(.all)
             VStack(alignment: .leading, spacing: 0) {
-                Text("Auth Token").bold().padding(.all, 4)
+                Text("Auth Token").bold().font(.system(size: 12))
                 HStack {
                     SecureField("", text: $authToken)
                         .padding(.all, 4)
@@ -639,12 +663,23 @@ struct ContentView: View {
                     .buttonStyle(.borderless)
                 }.frame(height: 40)
                 Divider()
-                VStack(alignment: .leading) {
-                    Text("ID").font(.system(size: 12)).bold()
-                    Text(conversationId).padding(.bottom, 4)
-                    Text("Title").font(.system(size: 12)).bold()
-                    Text(conversationTitle)
-                }.padding(.all, 4)
+                if !conversationId.isEmpty {
+                    VStack(alignment: .leading) {
+                        Text("ID").font(.system(size: 12)).bold()
+                        Text(conversationId).padding(.bottom, 4)
+                        Text("Title").font(.system(size: 12)).bold()
+                        Text(conversationTitle)
+                    }.padding(.all, 4)
+                } else {
+                    VStack(alignment: .center) {
+                        Text(
+                            isListening
+                                ? "Searching for conversation created in the last 30 seconds..."
+                                : "No conversation selected"
+                        ).padding(.all, 4)
+                    }
+                }
+
                 Divider()
                 ScrollView {
                     ScrollViewReader { proxy in
@@ -661,8 +696,6 @@ struct ContentView: View {
                                 }
                             }
                             .padding(.horizontal, 8)
-
-                            // Add an empty view at the bottom with an ID
                             Color.clear
                                 .frame(height: 1)
                                 .id("bottom")
