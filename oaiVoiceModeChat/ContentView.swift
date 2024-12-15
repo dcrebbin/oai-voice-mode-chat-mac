@@ -3,143 +3,6 @@ import CoreText
 import HighlightedTextEditor
 import SwiftUI
 
-struct ConversationItem: Decodable {
-    let id: String?
-    let title: String?
-    let create_time: String
-    let update_time: String
-    let mapping: String?
-    let current_node: String?
-    let conversation_template_id: String?
-    let gizmo_id: String?
-    let is_archived: Bool
-    let is_starred: Bool?
-    let is_unread: Bool?
-    let workspace_id: String?
-    let async_status: String?
-    let safe_urls: [String]?
-    let conversation_origin: String?
-    let snippet: String?
-}
-
-struct ConversationHistory: Decodable {
-    let items: [ConversationItem]
-}
-struct Message: Decodable {
-    let title: String?
-    let create_time: Double?
-    let update_time: Double?
-    let mapping: [String: MessageNode]?
-}
-
-struct MessageNode: Decodable {
-    let id: String
-    let message: MessageContent?
-    let parent: String?
-    let children: [String]
-}
-
-struct MessageContent: Decodable {
-    let id: String?
-    let author: Author?
-    let create_time: Double?
-    let update_time: Double?
-    let content: InnerContent?
-    let status: String?
-    let end_turn: Bool?
-    let weight: Double?
-    let metadata: MessageMetadata?
-    let recipient: String?
-    let channel: String?
-}
-
-struct Author: Decodable {
-    let role: String
-    let name: String?
-    let metadata: [String: String]
-}
-
-struct InnerContent: Decodable {
-    let content_type: String
-    let parts: [ContentPartEnum?]?
-}
-
-enum ContentPartEnum: Decodable {
-    case contentPart(ContentPart)
-    case string(String)
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let string = try? container.decode(String.self) {
-            self = .string(string)
-        } else if let contentPart = try? container.decode(ContentPart.self) {
-            self = .contentPart(contentPart)
-        } else {
-            throw DecodingError.typeMismatch(
-                ContentPartEnum.self,
-                DecodingError.Context(
-                    codingPath: decoder.codingPath,
-                    debugDescription: "Expected String or ContentPart"
-                )
-            )
-        }
-    }
-}
-
-struct ContentPart: Decodable {
-    let content_type: String?
-    let text: String?
-    let direction: String?
-    let decoding_id: String?
-    let expiry_datetime: String?
-    let frames_asset_pointers: [String]?
-    let video_container_asset_pointer: String?
-    let audio_asset_pointer: AudioAssetPointer?
-    let audio_start_timestamp: Double?
-}
-
-struct AudioAssetPointer: Decodable {
-    let expiry_datetime: String?
-    let content_type: String
-    let asset_pointer: String
-    let size_bytes: Int
-    let format: String
-    let metadata: AudioMetadata
-}
-
-struct AudioMetadata: Decodable {
-    let start_timestamp: Double?
-    let end_timestamp: Double?
-    let pretokenized_vq: String?
-    let interruptions: String?
-    let original_audio_source: String?
-    let transcription: String?
-    let start: Double?
-    let end: Double?
-}
-
-struct MessageMetadata: Decodable {
-    let voice_mode_message: Bool?
-    let request_id: String?
-    let message_source: String?
-    let timestamp_: String?
-    let message_type: String?
-    let real_time_audio_has_video: Bool?
-    let is_visually_hidden_from_conversation: Bool?
-    let citations: [String]?
-    let content_references: [String]?
-    let is_complete: Bool?
-    let parent_id: String?
-    let model_switcher_deny: [ModelSwitcherDeny]?
-}
-
-struct ModelSwitcherDeny: Decodable {
-    let slug: String
-    let context: String
-    let reason: String
-    let description: String
-}
-
 struct AppMessage {
     let text: String
     let isUser: Bool
@@ -148,19 +11,18 @@ struct AppMessage {
 }
 
 struct ContentView: View {
-
     @State private var messages: [AppMessage] = []
-
     @State private var authToken: String =
         UserDefaults.standard.string(forKey: "authToken") ?? ""
     @State private var isListening: Bool = false
-    @State private var onLatestConversation: Bool = false
     @State private var messageIds: [String] = []
     @State private var conversationId: String = ""
     @State private var conversationTitle: String = ""
     @State private var scrollProxy: ScrollViewProxy?
-    @State private var latestConversationCutoff: Double = 30
-    @State private var retrievalSpeed: Double = 3
+    @State private var latestConversationCutoff: Double =
+        UserDefaults.standard.double(forKey: "latestConversationCutoff") ?? 30
+    @State private var retrievalSpeed: Double =
+        UserDefaults.standard.double(forKey: "retrievalSpeed") ?? 3
 
     func userMessage(message: AppMessage) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
@@ -193,7 +55,7 @@ struct ContentView: View {
 
                 VStack(alignment: .leading) {
                     if !beforeCode.isEmpty {
-                        Text(.init(convertStringToMarkdown(message: beforeCode)))
+                        Text(.init(Constants.convertStringToMarkdown(message: beforeCode)))
                             .textSelection(.enabled)
                     }
 
@@ -224,156 +86,9 @@ struct ContentView: View {
                             text: .constant(
                                 code.replacingOccurrences(
                                     of: "```\\w*\\n?", with: "", options: .regularExpression)),
-                            highlightRules: [
-                                //=====================================================
-                                // 1) Swift Keywords
-                                //=====================================================
-                                HighlightRule(
-                                    pattern: try! NSRegularExpression(
-                                        pattern: #"""
-                                                (?<!\w)(?:func|let|var|if|else|guard|switch|case|break|continue|
-                                                return|while|for|in|init|deinit|throw|throws|rethrows|catch|as|
-                                                Any|AnyObject|Protocol|Type|typealias|associatedtype|class|enum|
-                                                extension|import|struct|subscript|where|self|Self|super|convenience|
-                                                dynamic|final|indirect|lazy|mutating|nonmutating|optional|override|
-                                                private|public|internal|fileprivate|open|required|static|unowned|
-                                                weak|try|defer|repeat|fallthrough|operator|precedencegroup|inout|
-                                                is)(?!\w)
-                                            """#,
-                                        options: [.allowCommentsAndWhitespace]
-                                    ),
-                                    formattingRules: [
-                                        TextFormattingRule(fontTraits: .bold),
-                                        TextFormattingRule(
-                                            key: .foregroundColor, value: NSColor.systemPurple),
-                                    ]
-                                ),
-
-                                //=====================================================
-                                // 2) Python Keywords
-                                //=====================================================
-                                HighlightRule(
-                                    pattern: try! NSRegularExpression(
-                                        pattern: #"""
-                                                (?<!\w)(?:def|class|import|from|as|if|elif|else|while|for|in|try|
-                                                except|finally|raise|with|lambda|return|yield|global|nonlocal|
-                                                pass|break|continue|True|False|None)(?!\w)
-                                            """#,
-                                        options: [.allowCommentsAndWhitespace]
-                                    ),
-                                    formattingRules: [
-                                        TextFormattingRule(fontTraits: .bold),
-                                        TextFormattingRule(
-                                            key: .foregroundColor, value: NSColor.systemOrange),
-                                    ]
-                                ),
-
-                                //=====================================================
-                                // 3) Java / C / C++ / JavaScript-like Keywords
-                                //=====================================================
-                                HighlightRule(
-                                    pattern: try! NSRegularExpression(
-                                        pattern: #"""
-                                                (?<!\w)(?:int|float|double|char|bool|void|class|public|private|
-                                                protected|static|final|virtual|override|extends|implements|
-                                                interface|new|return|break|continue|while|for|do|if|else|switch|
-                                                case|default|try|catch|throw|null|this|package|import|function|
-                                                let|var|const)(?!\w)
-                                            """#,
-                                        options: [.allowCommentsAndWhitespace]
-                                    ),
-                                    formattingRules: [
-                                        TextFormattingRule(fontTraits: .bold),
-                                        TextFormattingRule(
-                                            key: .foregroundColor, value: NSColor.systemTeal),
-                                    ]
-                                ),
-
-                                //=====================================================
-                                // 4) Booleans & null-like values (multi-language)
-                                //    (C/Java/JS/Python/Swift combos)
-                                //=====================================================
-                                HighlightRule(
-                                    pattern: try! NSRegularExpression(
-                                        pattern: #"""
-                                                (?<!\w)(?:true|false|nil|None|null)(?!\w)
-                                            """#
-                                    ),
-                                    formattingRules: [
-                                        TextFormattingRule(fontTraits: .bold),
-                                        TextFormattingRule(
-                                            key: .foregroundColor, value: NSColor.systemRed),
-                                    ]
-                                ),
-
-                                //=====================================================
-                                // 5) Numeric literals
-                                //=====================================================
-                                HighlightRule(
-                                    pattern: try! NSRegularExpression(
-                                        pattern: #"""
-                                                (?<!\w)\d+(?:\.\d+)?(?!\w)
-                                            """#
-                                    ),
-                                    formattingRules: [
-                                        TextFormattingRule(
-                                            key: .foregroundColor, value: NSColor.systemBlue)
-                                    ]
-                                ),
-
-                                //=====================================================
-                                // 6) String literals ("double quoted")
-                                //    If you want single quotes too, add pattern for '[^']*'
-                                //=====================================================
-                                HighlightRule(
-                                    pattern: try! NSRegularExpression(
-                                        pattern: #"""
-                                                "[^"]*"
-                                            """#
-                                    ),
-                                    formattingRules: [
-                                        TextFormattingRule(
-                                            key: .foregroundColor, value: NSColor.systemGreen)
-                                    ]
-                                ),
-
-                                //=====================================================
-                                // 7) Single-line comments (// or #)
-                                //    - Many C-like languages use //
-                                //    - Python uses #
-                                //=====================================================
-                                HighlightRule(
-                                    pattern: try! NSRegularExpression(
-                                        pattern: #"""
-                                                (//.*|#.*)
-                                            """#
-                                    ),
-                                    formattingRules: [
-                                        TextFormattingRule(
-                                            key: .foregroundColor, value: NSColor.gray)
-                                    ]
-                                ),
-
-                                //=====================================================
-                                // 8) Multi-line comments (/* ... */)
-                                //    - Common in C, C++, Java, JavaScript
-                                //    - We use a DOTALL-like approach to match across lines
-                                //=====================================================
-                                HighlightRule(
-                                    pattern: try! NSRegularExpression(
-                                        // (?s) allows dot to match newlines (in many regex engines).
-                                        // But in NSRegularExpression, we approximate with [\s\S].
-                                        pattern: #"""
-                                                /\*[\s\S]*?\*/
-                                            """#,
-                                        options: []
-                                    ),
-                                    formattingRules: [
-                                        TextFormattingRule(
-                                            key: .foregroundColor, value: NSColor.darkGray)
-                                    ]
-                                ),
-                            ]
+                            highlightRules:
+                            Constants.HIGHLIGHT_RULES
+                            
                         )
                         .frame(height: CGFloat(code.components(separatedBy: .newlines).count) * 20)
                     }
@@ -381,13 +96,13 @@ struct ContentView: View {
                     .cornerRadius(10)
 
                     if !afterCode.isEmpty {
-                        Text(.init(convertStringToMarkdown(message: afterCode)))
+                        Text(.init(Constants.convertStringToMarkdown(message: afterCode)))
                             .textSelection(.enabled)
                     }
                 }
 
             } else {
-                Text(.init(convertStringToMarkdown(message: message.text)))
+                Text(.init(Constants.convertStringToMarkdown(message: message.text)))
                     .frame(minHeight: 40)
                     .padding(.horizontal, 13)
                     .padding(.vertical, 8)
@@ -427,61 +142,6 @@ struct ContentView: View {
                 }
             }
         }
-    }
-
-    func convertStringToMarkdown(message: String) -> String {
-        var markdown = message
-
-        // Convert bold: **text** or __text__
-        markdown = markdown.replacingOccurrences(
-            of: "(\\*\\*|__)(.+?)(\\*\\*|__)",
-            with: "**$2**",
-            options: .regularExpression
-        )
-
-        // Convert italic: *text* or _text_
-        markdown = markdown.replacingOccurrences(
-            of: "(?<!\\*)(\\*|_)(?!\\*)(.*?)(?<!\\*)(\\*|_)(?!\\*)",
-            with: "*$2*",
-            options: .regularExpression
-        )
-
-        // Convert code blocks: ```text```
-        markdown = markdown.replacingOccurrences(
-            of: "```([\\s\\S]*?)```",
-            with: "```\n$1\n```",
-            options: .regularExpression
-        )
-
-        // Convert inline code: `text`
-        markdown = markdown.replacingOccurrences(
-            of: "`([^`]+)`",
-            with: "`$1`",
-            options: .regularExpression
-        )
-
-        // Convert links: [text](url)
-        markdown = markdown.replacingOccurrences(
-            of: "\\[([^\\]]+)\\]\\(([^\\)]+)\\)",
-            with: "[$1]($2)",
-            options: .regularExpression
-        )
-
-        // Convert bullet lists: * text or - text
-        markdown = markdown.replacingOccurrences(
-            of: "^[\\s]*(\\*|-)[\\s]+(.+)$",
-            with: "• $2",
-            options: [.regularExpression]
-        )
-
-        // Convert numbered lists: 1. text
-        markdown = markdown.replacingOccurrences(
-            of: "^[\\s]*\\d+\\.[\\s]+(.+)$",
-            with: "1. $1",
-            options: [.regularExpression]
-        )
-
-        return markdown
     }
 
     func retrieveLatestConversation() {
@@ -634,10 +294,6 @@ struct ContentView: View {
         timer = nil
     }
 
-    func saveAuthToken() {
-        UserDefaults.standard.set(authToken, forKey: "authToken")
-    }
-
     var settingsView: some View {
         ScrollView {
             VStack(alignment: .leading) {
@@ -648,50 +304,47 @@ struct ContentView: View {
                         .padding(.horizontal, 10)
                         .textFieldStyle(.roundedBorder)
                 }
+                Text("Retrieval Speed").bold().font(.system(size: 12)).padding(.leading, 10)
+                Text(
+                    "This is the speed at which the app will check for new messages in the conversation. Lower values will check more frequently: used for rate limiting mitigation."
+                ).font(.system(size: 10)).padding(.leading, 10).textSelection(.enabled)
                 HStack {
-                    Text("Retrieval Speed").bold().font(.system(size: 12))
-                    Button {
-                    } label: {
-                        Image(systemName: "questionmark.circle")
-                    }
-                    .help(
-                        "This is the speed at which the app will check for new messages in the conversation. Lower values will check more frequently, but may use more CPU."
-                    )
-                }
-                .padding(.leading, 10)
-                HStack {
-                    Slider(value: $retrievalSpeed, in: 3...10, step: 0.25)
+                    Slider(value: $retrievalSpeed, in: 0.25...10, step: 0.25)
+                        .onChange(of: retrievalSpeed) {
+                            UserDefaults.standard.set(retrievalSpeed, forKey: "retrievalSpeed")
+                        }
                         .padding(.horizontal, 10)
-                    Text(String(format: "%.2f", retrievalSpeed))
+                    Text(String(format: "%.2f", retrievalSpeed) + "s")
                 }
+                Text("Latest Conversation Cutoff").bold().font(.system(size: 12)).padding(
+                    .leading, 10)
+                Text(
+                    "This is the cutoff time for a conversation to be considered 'new'. Lower values will ensure newer conversations are retrieved and older conversations will be ignored."
+                ).padding(.leading, 10).font(.system(size: 10)).textSelection(.enabled)
                 HStack {
-                    Text("Latest Conversation Cutoff").bold().font(.system(size: 12)).padding(
-                        .leading, 10)
-                    Button {
-                    } label: {
-                        Image(systemName: "questionmark.circle")
-                    }
-                    .help(
-                        "This is the cutoff time for a conversation to be considered 'new'. Lower values will ensure newer conversations are retrieved and older conversations will be ignored."
-                    )
-                }
-                HStack {
-                    Slider(value: $latestConversationCutoff, in: 1...3600)
+                    Slider(value: $latestConversationCutoff, in: 1...300)
                         .padding(.horizontal, 10)
-                    Text(String(format: "%.2f", latestConversationCutoff))
+                        .onChange(of: latestConversationCutoff) {
+                            UserDefaults.standard.set(
+                                latestConversationCutoff, forKey: "latestConversationCutoff")
+                        }
+                    Text(String(format: "%.2f", latestConversationCutoff) + "s")
                 }
-                Text("*Auth Token Tutorial").padding(.top, 10).padding(.leading, 10)
+                Text("*Auth Token Tutorial").bold().padding(.top, 10).padding(.leading, 10)
                 Text(
                     "Note: this isn't just your OpenAI API key: this is your user auth token which is used to perform elevated actions for your account (dangerous)."
-                ).bold().font(.system(size: 10)).padding(.leading, 10)
+                ).font(.system(size: 10)).padding(.leading, 10).textSelection(.enabled)
+                Spacer()
                 Text("1. (Whilst logged in) head to: https://chatgpt.com").padding(.leading, 10)
+                    .textSelection(.enabled)
                 Text("2. Open your browser's developer tools and view the Network tab").padding(
-                    .leading, 10)
-                Text("3. Find the request to: https://chatgpt.com/backend-api/conversations").padding(
-                    .leading, 10)
+                    .leading, 10
+                ).textSelection(.enabled)
+                Text("3. Find the request to: https://chatgpt.com/backend-api/conversations")
+                    .padding(.leading, 10).textSelection(.enabled)
                 Text(
                     "4. Copy & paste the Authorization header value (eyJhbGci...) into the field above"
-                ).padding(.leading, 10)
+                ).padding(.leading, 10).textSelection(.enabled)
                 Image("AuthTokenTutorial")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -712,7 +365,7 @@ struct ContentView: View {
                 TabView {
                     VStack(alignment: .leading) {
                         HStack {
-                            Text("Listen for latest conversation")
+                            Text("Retrieve latest conversations:").padding(.leading, 10)
                             Button(action: toggleListening) {
                                 Image(
                                     systemName: {
@@ -749,19 +402,22 @@ struct ContentView: View {
                                 Text(conversationTitle)
                             }.padding(.all, 4)
                             Divider()
-                        } else if isListening {
-                            VStack(alignment: .center) {
-                                Text(
-                                    "Searching for conversation created in the last 30 seconds..."
-                                ).padding(.all, 4)
-                            }
                         }
                         ScrollView {
                             ScrollViewReader { proxy in
                                 LazyVStack {
                                     if messages.isEmpty {
-                                        Text("No conversation selected").padding(.all, 4)
+                                        if isListening {
+                                            Text(
+                                                "Searching for conversations..."
+                                            )
+                                            .frame(maxWidth: .infinity, alignment: .center)
+                                            .padding(.all, 4)
+                                        } else {
+                                            Text("No conversation selected")
+                                        }
                                     }
+
                                     ForEach(
                                         messages.sorted(by: {
                                             ($0.createTime ?? 0) < ($1.createTime ?? 0)
