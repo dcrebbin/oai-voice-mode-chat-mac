@@ -158,6 +158,8 @@ struct ContentView: View {
     @State private var retrievalSpeed: Int = 3
 
     @State private var messageIds: [String] = []
+    @State private var conversationId: String = "675d127e-77dc-8004-99b8-bf077cd7876b"
+    @State private var conversationTitle: String = ""
 
     func userMessage(message: AppMessage) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
@@ -184,7 +186,6 @@ struct ContentView: View {
             if let codeBlockRange = message.text.range(
                 of: "```[\\s\\S]*?```", options: .regularExpression)
             {
-                // Extract code block and surrounding text
                 let beforeCode = String(message.text[..<codeBlockRange.lowerBound])
                 let code = String(message.text[codeBlockRange])
                 let afterCode = String(message.text[codeBlockRange.upperBound...])
@@ -410,12 +411,15 @@ struct ContentView: View {
     func startListening() {
         print("Starting listening")
         // retrieveLatestConversation()
-        retrieveMessagesFromConversation()
-        // timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(retrievalSpeed), repeats: true)
-        // { _ in
-        //     print("Still listening...")
-        //     retrieveLatestConversation()
-        // }
+                retrieveMessagesFromConversation()
+
+        timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(retrievalSpeed), repeats: true)
+        { _ in
+            print("Still listening...")
+                    retrieveMessagesFromConversation()
+
+            // retrieveMessagesFromConversation()
+        }
     }
 
     func convertStringToMarkdown(message: String) -> String {
@@ -526,9 +530,7 @@ struct ContentView: View {
         task.resume()
     }
 
-    func retrieveMessagesFromConversation(
-        conversationId: String = "675d127e-77dc-8004-99b8-bf077cd7876b"
-    ) {
+    func retrieveMessagesFromConversation() {
         if authToken == "" {
             print("No OpenAI key found")
             return
@@ -561,6 +563,7 @@ struct ContentView: View {
                 let decoder = JSONDecoder()
                 let message: Message = try decoder.decode(Message.self, from: data)
                 print("message: \(String(describing: message.mapping?.first?.value.id)) retrieved")
+                conversationTitle = message.title ?? "New Conversation"
                 if let mapping = message.mapping {
 
                     for (_, value) in mapping {
@@ -627,6 +630,13 @@ struct ContentView: View {
                     }
                     .buttonStyle(.borderless)
                 }.frame(height: 40)
+                Divider()
+                VStack(alignment: .leading) {
+                    Text("ID").font(.system(size: 12)).bold()
+                    Text(conversationId).padding(.bottom, 4)
+                    Text("Title").font(.system(size: 12)).bold()
+                    Text(conversationTitle)
+                }.padding(.all, 4)
                 Divider()
                 ScrollView {
                     ForEach(
