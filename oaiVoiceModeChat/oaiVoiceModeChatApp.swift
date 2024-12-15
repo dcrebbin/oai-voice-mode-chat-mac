@@ -79,7 +79,6 @@ struct oaiVoiceModeChatApp: App {
             statusItem?.button?.image?.size = NSSize(width: 24.0, height: 24.0)
             statusItem?.button?.imagePosition = .imageOnly
             button.target = ToolbarDelegate.shared
-            button.action = #selector(ToolbarDelegate.shared.toggleWindow)
             button.sendAction(on: [.leftMouseUp])
         }
 
@@ -125,52 +124,34 @@ class ToolbarDelegate: NSObject, NSToolbarDelegate {
         _ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier,
         willBeInsertedIntoToolbar flag: Bool
     ) -> NSToolbarItem? {
-        switch itemIdentifier.rawValue {
-        case "Button":
+
+        switch itemIdentifier {
+        case .init("Sidebar"):
             let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-            item.image = NSImage(named: NSImage.Name("gear"))
-            item.image?.size = NSSize(width: 24.0, height: 24.0)
-            item.target = ToolbarDelegate.shared
-            item.action = #selector(ToolbarDelegate.shared.toggleWindow)
+            item.label = "Sidebar"
+            item.image = NSImage(
+                systemSymbolName: "sidebar.left", accessibilityDescription: "Toggle Sidebar")
+            item.target = self
+            item.action = #selector(toggleSidebar)
+            item.isBordered = true
+            item.isNavigational = true
             return item
         default:
             return nil
         }
     }
 
-    //create and show settings window
-    func showSettingsWindow() {
-        let settingsWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 450, height: 440),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered,
-            defer: false)
-        settingsWindow.center()
-        settingsWindow.makeKeyAndOrderFront(nil)
-        settingsWindow.level = .floating
-        settingsWindow.titlebarAppearsTransparent = true
-        settingsWindow.isMovableByWindowBackground = true
-        settingsWindow.toolbar = NSToolbar(identifier: "SettingsToolbar")
-        settingsWindow.toolbar?.delegate = ToolbarDelegate.shared
-        settingsWindow.contentView = NSHostingView(rootView: SettingsView())
-        settingsWindow.makeKeyAndOrderFront(nil)
-    }
-
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
         [
-            NSToolbarItem.Identifier("Button")
+            NSToolbarItem.Identifier("Sidebar")
         ]
     }
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
         toolbarDefaultItemIdentifiers(toolbar)
     }
 
-    @objc func toggleWindow() {
-        if NSApp.isActive {
-            NSApp.hide(nil)
-        } else {
-            NSApp.unhide(nil)
-            NSApp.activate(ignoringOtherApps: true)
-        }
+    @objc func toggleSidebar() {
+
     }
 }
 

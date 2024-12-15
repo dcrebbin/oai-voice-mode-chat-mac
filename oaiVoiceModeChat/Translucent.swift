@@ -28,13 +28,13 @@ struct TranslucentWindowModifier: ViewModifier {
                 WindowAccessor { window in
                     guard let window = window else { return }
                     window.level = .floating
-                    let customToolbar: NSToolbar = NSToolbar(identifier: "MainToolbar")
-                    customToolbar.delegate = ToolbarDelegate.shared
+                    // let customToolbar = NSToolbar()
+                    // customToolbar.delegate = ToolbarDelegate.shared
+                    // window.toolbar = customToolbar
                     window.setContentSize(NSSize(width: 450, height: 440))
                     window.appearance = NSAppearance(named: .vibrantDark)
-                    window.titlebarAppearsTransparent = true
+                    window.titlebarAppearsTransparent = false
                     window.isMovableByWindowBackground = true
-                    window.toolbar = customToolbar
                 }
             )
     }

@@ -155,12 +155,12 @@ struct ContentView: View {
         UserDefaults.standard.string(forKey: "authToken") ?? ""
     @State private var isListening: Bool = false
     @State private var onLatestConversation: Bool = false
-    @State private var retrievalSpeed: Int = 3
-
     @State private var messageIds: [String] = []
     @State private var conversationId: String = ""
     @State private var conversationTitle: String = ""
     @State private var scrollProxy: ScrollViewProxy?
+    @State private var latestConversationCutoff: Double = 30
+    @State private var retrievalSpeed: Double = 3
 
     func userMessage(message: AppMessage) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
@@ -531,7 +531,8 @@ struct ContentView: View {
                     )
 
                     print(firstItem.title)
-                    if currentTimeUTC.timeIntervalSince(utcTime) > 30 {
+                    if currentTimeUTC.timeIntervalSince(utcTime) > Double(latestConversationCutoff)
+                    {
                         print("Conversation is too old")
                     } else {
                         print("Conversation is new")
@@ -633,118 +634,172 @@ struct ContentView: View {
         timer = nil
     }
 
-    var body: some View {
-        ZStack(alignment: .top) {
-            VisualEffectView(material: .hudWindow)
-                .edgesIgnoringSafeArea(.all)
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Auth Token").bold().font(.system(size: 12))
+    func saveAuthToken() {
+        UserDefaults.standard.set(authToken, forKey: "authToken")
+    }
+
+    var settingsView: some View {
+        ScrollView {
+            VStack(alignment: .leading) {
+                Text("Auth Token*").bold().font(.system(size: 12)).padding(.leading, 10).padding(
+                    .top, 10)
                 HStack {
                     SecureField("", text: $authToken)
-                        .padding(.all, 4)
+                        .padding(.horizontal, 10)
                         .textFieldStyle(.roundedBorder)
-                        .onChange(of: authToken) { oldValue, newValue in
-                            UserDefaults.standard.set(newValue, forKey: "authToken")
-                        }
-                    Button(action: toggleListening) {
-                        Image(
-                            systemName: {
-                                if isListening {
-                                    return "speaker.wave.2.fill"
-                                } else {
-                                    return "speaker.slash.fill"
-                                }
-                            }()
-                        )
-                        .font(.system(size: 20))
-                        .scaledToFill()
-                        .padding(isListening ? 0 : 4)
-                    }
-                    .buttonStyle(.borderless)
-                    if !conversationId.isEmpty {
-                        Button(action: {
-                            print("Clear conversation")
-                            messages = []
-                            conversationId = ""
-                            conversationTitle = ""
-                        }) {
-                            Image(systemName: "clear")
-                        }
-                    }
-                }.frame(height: 40)
-                Divider()
-                if !conversationId.isEmpty {
-                    VStack(alignment: .leading) {
-                        Text("ID").font(.system(size: 12)).bold()
-                        Text(conversationId).padding(.bottom, 4)
-                        Text("Title").font(.system(size: 12)).bold()
-                        Text(conversationTitle)
-                    }.padding(.all, 4)
-                } else {
-                    VStack(alignment: .center) {
-                        Text(
-                            "Searching for conversation created in the last 30 seconds..."
-                        ).padding(.all, 4)
-                    }
                 }
-
-                Divider()
-                ScrollView {
-                    ScrollViewReader { proxy in
-                        LazyVStack {
-                            if messages.isEmpty {
-                                Text("No conversation selected").padding(.all, 4)
-                            }
-                            ForEach(
-                                messages.sorted(by: { ($0.createTime ?? 0) < ($1.createTime ?? 0) }
-                                ),
-                                id: \.text
-                            ) { message in
-                                if message.isUser {
-                                    userMessage(message: message)
-                                } else {
-                                    oaiMessage(message: message)
-                                }
-                            }
-                            .padding(.horizontal, 8)
-                            Color.clear
-                                .frame(height: 1)
-                                .id("bottom")
-                        }
-                        .onAppear {
-                            print("onAppear")
-                            scrollProxy = proxy
-                        }
+                HStack {
+                    Text("Retrieval Speed").bold().font(.system(size: 12))
+                    Button {
+                    } label: {
+                        Image(systemName: "questionmark.circle")
                     }
+                    .help(
+                        "This is the speed at which the app will check for new messages in the conversation. Lower values will check more frequently, but may use more CPU."
+                    )
                 }
-                .padding(.all, 4)
+                .padding(.leading, 10)
+                HStack {
+                    Slider(value: $retrievalSpeed, in: 3...10, step: 0.25)
+                        .padding(.horizontal, 10)
+                    Text(String(format: "%.2f", retrievalSpeed))
+                }
+                HStack {
+                    Text("Latest Conversation Cutoff").bold().font(.system(size: 12)).padding(
+                        .leading, 10)
+                    Button {
+                    } label: {
+                        Image(systemName: "questionmark.circle")
+                    }
+                    .help(
+                        "This is the cutoff time for a conversation to be considered 'new'. Lower values will ensure newer conversations are retrieved and older conversations will be ignored."
+                    )
+                }
+                HStack {
+                    Slider(value: $latestConversationCutoff, in: 1...3600)
+                        .padding(.horizontal, 10)
+                    Text(String(format: "%.2f", latestConversationCutoff))
+                }
+                Text("*Auth Token Tutorial").padding(.top, 10).padding(.leading, 10)
+                Text(
+                    "Note: this isn't just your OpenAI API key: this is your user auth token which is used to perform elevated actions for your account (dangerous)."
+                ).bold().font(.system(size: 10)).padding(.leading, 10)
+                Text("1. (Whilst logged in) head to: https://chatgpt.com").padding(.leading, 10)
+                Text("2. Open your browser's developer tools and view the Network tab").padding(
+                    .leading, 10)
+                Text("3. Find the request to: https://chatgpt.com/backend-api/conversations").padding(
+                    .leading, 10)
+                Text(
+                    "4. Copy & paste the Authorization header value (eyJhbGci...) into the field above"
+                ).padding(.leading, 10)
+                Image("AuthTokenTutorial")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: 700, alignment: .center)
+                    .padding(.leading, 10)
+                Spacer()
             }
-            .padding(.all, 6)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    }
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            TranslucentView(material: .hudWindow)
+                .edgesIgnoringSafeArea(.all)
+
+            VStack(alignment: .leading, spacing: 0) {
+                TabView {
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text("Listen for latest conversation")
+                            Button(action: toggleListening) {
+                                Image(
+                                    systemName: {
+                                        if isListening {
+                                            return "speaker.wave.2.fill"
+                                        } else {
+                                            return "speaker.slash.fill"
+                                        }
+                                    }()
+                                )
+                                .font(.system(size: 20))
+                                .scaledToFill()
+                                .padding(isListening ? 0 : 4)
+                            }
+                            .buttonStyle(.borderless)
+                            if !conversationId.isEmpty {
+                                Text("Clear Conversation")
+                                Button(action: {
+                                    print("Clear conversation")
+                                    messages = []
+                                    conversationId = ""
+                                    conversationTitle = ""
+                                }) {
+                                    Image(systemName: "clear")
+                                }
+                            }
+                        }.frame(height: 40)
+                        Divider()
+                        if !conversationId.isEmpty {
+                            VStack(alignment: .leading) {
+                                Text("ID").font(.system(size: 12)).bold()
+                                Text(conversationId).padding(.bottom, 4)
+                                Text("Title").font(.system(size: 12)).bold()
+                                Text(conversationTitle)
+                            }.padding(.all, 4)
+                            Divider()
+                        } else if isListening {
+                            VStack(alignment: .center) {
+                                Text(
+                                    "Searching for conversation created in the last 30 seconds..."
+                                ).padding(.all, 4)
+                            }
+                        }
+                        ScrollView {
+                            ScrollViewReader { proxy in
+                                LazyVStack {
+                                    if messages.isEmpty {
+                                        Text("No conversation selected").padding(.all, 4)
+                                    }
+                                    ForEach(
+                                        messages.sorted(by: {
+                                            ($0.createTime ?? 0) < ($1.createTime ?? 0)
+                                        }
+                                        ),
+                                        id: \.text
+                                    ) { message in
+                                        if message.isUser {
+                                            userMessage(message: message)
+                                        } else {
+                                            oaiMessage(message: message)
+                                        }
+                                    }
+                                    .padding(.horizontal, 8)
+                                    Color.clear
+                                        .frame(height: 1)
+                                        .id("bottom")
+                                }
+                                .onAppear {
+                                    print("onAppear")
+                                    scrollProxy = proxy
+                                }
+                            }
+                        }
+                    }
+                    .background(Color(.clear))
+                    .tabItem {
+                        Label("Conversation", systemImage: "message")
+                    }
+                    settingsView.tabItem {
+                        Label("Settings", systemImage: "gear")
+                    }
+                }.tabViewStyle(.sidebarAdaptable).frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .edgesIgnoringSafeArea(.all).padding(.all, 0)
+            }
             .frame(maxWidth: .infinity, minHeight: 250, maxHeight: .infinity)
-            .background(Color.clear)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.clear)
-    }
-}
-
-struct VisualEffectView: NSViewRepresentable {
-    var material: NSVisualEffectView.Material
-    var blendingMode: NSVisualEffectView.BlendingMode = .behindWindow
-    var state: NSVisualEffectView.State = .active
-
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = material
-        view.blendingMode = blendingMode
-        view.state = state
-        return view
-    }
-
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
-        nsView.material = material
-        nsView.blendingMode = blendingMode
-        nsView.state = state
     }
 }
 
