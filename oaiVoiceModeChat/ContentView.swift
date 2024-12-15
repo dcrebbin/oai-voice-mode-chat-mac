@@ -160,6 +160,7 @@ struct ContentView: View {
     @State private var messageIds: [String] = []
     @State private var conversationId: String = "675d127e-77dc-8004-99b8-bf077cd7876b"
     @State private var conversationTitle: String = ""
+    @State private var scrollProxy: ScrollViewProxy?
 
     func userMessage(message: AppMessage) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
@@ -411,12 +412,12 @@ struct ContentView: View {
     func startListening() {
         print("Starting listening")
         // retrieveLatestConversation()
-                retrieveMessagesFromConversation()
+        retrieveMessagesFromConversation()
 
         timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(retrievalSpeed), repeats: true)
         { _ in
             print("Still listening...")
-                    retrieveMessagesFromConversation()
+            retrieveMessagesFromConversation()
 
             // retrieveMessagesFromConversation()
         }
@@ -584,12 +585,19 @@ struct ContentView: View {
                             }
 
                             messageIds.append(messageId ?? "")
+                            // scroll to bottom
                         }
 
                     }
                 }
             } catch {
                 print("Failed to decode conversation: \(error)")
+            }
+
+            DispatchQueue.main.async {
+
+                // After messages are updated, scroll to bottom
+                scrollProxy?.scrollTo("bottom", anchor: .bottom)
             }
         }
         task.resume()
@@ -639,17 +647,31 @@ struct ContentView: View {
                 }.padding(.all, 4)
                 Divider()
                 ScrollView {
-                    ForEach(
-                        messages.sorted(by: { ($0.createTime ?? 0) < ($1.createTime ?? 0) }),
-                        id: \.text
-                    ) { message in
-                        if message.isUser {
-                            userMessage(message: message)
-                        } else {
-                            oaiMessage(message: message)
+                    ScrollViewReader { proxy in
+                        LazyVStack {
+                            ForEach(
+                                messages.sorted(by: { ($0.createTime ?? 0) < ($1.createTime ?? 0) }
+                                ),
+                                id: \.text
+                            ) { message in
+                                if message.isUser {
+                                    userMessage(message: message)
+                                } else {
+                                    oaiMessage(message: message)
+                                }
+                            }
+                            .padding(.horizontal, 8)
+
+                            // Add an empty view at the bottom with an ID
+                            Color.clear
+                                .frame(height: 1)
+                                .id("bottom")
+                        }
+                        .onAppear {
+                            print("onAppear")
+                            scrollProxy = proxy
                         }
                     }
-                    .padding(.horizontal, 8)
                 }
                 .padding(.all, 4)
             }
