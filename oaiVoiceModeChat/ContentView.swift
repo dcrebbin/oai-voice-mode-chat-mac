@@ -189,169 +189,201 @@ struct ContentView: View {
                 let code = String(message.text[codeBlockRange])
                 let afterCode = String(message.text[codeBlockRange.upperBound...])
 
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading) {
                     if !beforeCode.isEmpty {
                         Text(.init(convertStringToMarkdown(message: beforeCode)))
                             .textSelection(.enabled)
                     }
-                    HighlightedTextEditor(
-                        text: .constant(
-                            code.replacingOccurrences(
-                                of: "```\\w*\\n?", with: "", options: .regularExpression)),
-                        highlightRules:[
-                        //=====================================================
-                        // 1) Swift Keywords
-                        //=====================================================
-                        HighlightRule(
-                            pattern: try! NSRegularExpression(
-                                pattern: #"""
-                                        (?<!\w)(?:func|let|var|if|else|guard|switch|case|break|continue|
-                                        return|while|for|in|init|deinit|throw|throws|rethrows|catch|as|
-                                        Any|AnyObject|Protocol|Type|typealias|associatedtype|class|enum|
-                                        extension|import|struct|subscript|where|self|Self|super|convenience|
-                                        dynamic|final|indirect|lazy|mutating|nonmutating|optional|override|
-                                        private|public|internal|fileprivate|open|required|static|unowned|
-                                        weak|try|defer|repeat|fallthrough|operator|precedencegroup|inout|
-                                        is)(?!\w)
-                                    """#,
-                                options: [.allowCommentsAndWhitespace]
-                            ),
-                            formattingRules: [
-                                TextFormattingRule(fontTraits: .bold),
-                                TextFormattingRule(
-                                    key: .foregroundColor, value: NSColor.systemPurple),
-                            ]
-                        ),
 
-                        //=====================================================
-                        // 2) Python Keywords
-                        //=====================================================
-                        HighlightRule(
-                            pattern: try! NSRegularExpression(
-                                pattern: #"""
-                                        (?<!\w)(?:def|class|import|from|as|if|elif|else|while|for|in|try|
-                                        except|finally|raise|with|lambda|return|yield|global|nonlocal|
-                                        pass|break|continue|True|False|None)(?!\w)
-                                    """#,
-                                options: [.allowCommentsAndWhitespace]
-                            ),
-                            formattingRules: [
-                                TextFormattingRule(fontTraits: .bold),
-                                TextFormattingRule(
-                                    key: .foregroundColor, value: NSColor.systemOrange),
-                            ]
-                        ),
+                    let language = code.components(separatedBy: "\n")[0].replacingOccurrences(
+                        of: "```", with: "")
 
-                        //=====================================================
-                        // 3) Java / C / C++ / JavaScript-like Keywords
-                        //=====================================================
-                        HighlightRule(
-                            pattern: try! NSRegularExpression(
-                                pattern: #"""
-                                        (?<!\w)(?:int|float|double|char|bool|void|class|public|private|
-                                        protected|static|final|virtual|override|extends|implements|
-                                        interface|new|return|break|continue|while|for|do|if|else|switch|
-                                        case|default|try|catch|throw|null|this|package|import|function|
-                                        let|var|const)(?!\w)
-                                    """#,
-                                options: [.allowCommentsAndWhitespace]
-                            ),
-                            formattingRules: [
-                                TextFormattingRule(fontTraits: .bold),
-                                TextFormattingRule(
-                                    key: .foregroundColor, value: NSColor.systemTeal),
-                            ]
-                        ),
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack {
+                            Text(language)
+                                .font(.system(size: 14))
+                            Spacer()
+                            Button(action: {
+                                print("Copy")
+                                let pasteboard = NSPasteboard.general
+                                pasteboard.clearContents()
+                                pasteboard.setString(
+                                    code.replacingOccurrences(
+                                        of: "```\\w*\\n?", with: "", options: .regularExpression),
+                                    forType: .string)
+                            }) {
+                                Image(systemName: "doc.on.doc")
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                        .frame(maxWidth: .infinity, minHeight: 35)
+                        .background(Color.gray.opacity(0.2))
+                        HighlightedTextEditor(
+                            text: .constant(
+                                code.replacingOccurrences(
+                                    of: "```\\w*\\n?", with: "", options: .regularExpression)),
+                            highlightRules: [
+                                //=====================================================
+                                // 1) Swift Keywords
+                                //=====================================================
+                                HighlightRule(
+                                    pattern: try! NSRegularExpression(
+                                        pattern: #"""
+                                                (?<!\w)(?:func|let|var|if|else|guard|switch|case|break|continue|
+                                                return|while|for|in|init|deinit|throw|throws|rethrows|catch|as|
+                                                Any|AnyObject|Protocol|Type|typealias|associatedtype|class|enum|
+                                                extension|import|struct|subscript|where|self|Self|super|convenience|
+                                                dynamic|final|indirect|lazy|mutating|nonmutating|optional|override|
+                                                private|public|internal|fileprivate|open|required|static|unowned|
+                                                weak|try|defer|repeat|fallthrough|operator|precedencegroup|inout|
+                                                is)(?!\w)
+                                            """#,
+                                        options: [.allowCommentsAndWhitespace]
+                                    ),
+                                    formattingRules: [
+                                        TextFormattingRule(fontTraits: .bold),
+                                        TextFormattingRule(
+                                            key: .foregroundColor, value: NSColor.systemPurple),
+                                    ]
+                                ),
 
-                        //=====================================================
-                        // 4) Booleans & null-like values (multi-language)
-                        //    (C/Java/JS/Python/Swift combos)
-                        //=====================================================
-                        HighlightRule(
-                            pattern: try! NSRegularExpression(
-                                pattern: #"""
-                                        (?<!\w)(?:true|false|nil|None|null)(?!\w)
-                                    """#
-                            ),
-                            formattingRules: [
-                                TextFormattingRule(fontTraits: .bold),
-                                TextFormattingRule(key: .foregroundColor, value: NSColor.systemRed),
-                            ]
-                        ),
+                                //=====================================================
+                                // 2) Python Keywords
+                                //=====================================================
+                                HighlightRule(
+                                    pattern: try! NSRegularExpression(
+                                        pattern: #"""
+                                                (?<!\w)(?:def|class|import|from|as|if|elif|else|while|for|in|try|
+                                                except|finally|raise|with|lambda|return|yield|global|nonlocal|
+                                                pass|break|continue|True|False|None)(?!\w)
+                                            """#,
+                                        options: [.allowCommentsAndWhitespace]
+                                    ),
+                                    formattingRules: [
+                                        TextFormattingRule(fontTraits: .bold),
+                                        TextFormattingRule(
+                                            key: .foregroundColor, value: NSColor.systemOrange),
+                                    ]
+                                ),
 
-                        //=====================================================
-                        // 5) Numeric literals
-                        //=====================================================
-                        HighlightRule(
-                            pattern: try! NSRegularExpression(
-                                pattern: #"""
-                                        (?<!\w)\d+(?:\.\d+)?(?!\w)
-                                    """#
-                            ),
-                            formattingRules: [
-                                TextFormattingRule(key: .foregroundColor, value: NSColor.systemBlue)
-                            ]
-                        ),
+                                //=====================================================
+                                // 3) Java / C / C++ / JavaScript-like Keywords
+                                //=====================================================
+                                HighlightRule(
+                                    pattern: try! NSRegularExpression(
+                                        pattern: #"""
+                                                (?<!\w)(?:int|float|double|char|bool|void|class|public|private|
+                                                protected|static|final|virtual|override|extends|implements|
+                                                interface|new|return|break|continue|while|for|do|if|else|switch|
+                                                case|default|try|catch|throw|null|this|package|import|function|
+                                                let|var|const)(?!\w)
+                                            """#,
+                                        options: [.allowCommentsAndWhitespace]
+                                    ),
+                                    formattingRules: [
+                                        TextFormattingRule(fontTraits: .bold),
+                                        TextFormattingRule(
+                                            key: .foregroundColor, value: NSColor.systemTeal),
+                                    ]
+                                ),
 
-                        //=====================================================
-                        // 6) String literals ("double quoted")
-                        //    If you want single quotes too, add pattern for '[^']*'
-                        //=====================================================
-                        HighlightRule(
-                            pattern: try! NSRegularExpression(
-                                pattern: #"""
-                                        "[^"]*"
-                                    """#
-                            ),
-                            formattingRules: [
-                                TextFormattingRule(
-                                    key: .foregroundColor, value: NSColor.systemGreen)
-                            ]
-                        ),
+                                //=====================================================
+                                // 4) Booleans & null-like values (multi-language)
+                                //    (C/Java/JS/Python/Swift combos)
+                                //=====================================================
+                                HighlightRule(
+                                    pattern: try! NSRegularExpression(
+                                        pattern: #"""
+                                                (?<!\w)(?:true|false|nil|None|null)(?!\w)
+                                            """#
+                                    ),
+                                    formattingRules: [
+                                        TextFormattingRule(fontTraits: .bold),
+                                        TextFormattingRule(
+                                            key: .foregroundColor, value: NSColor.systemRed),
+                                    ]
+                                ),
 
-                        //=====================================================
-                        // 7) Single-line comments (// or #)
-                        //    - Many C-like languages use //
-                        //    - Python uses #
-                        //=====================================================
-                        HighlightRule(
-                            pattern: try! NSRegularExpression(
-                                pattern: #"""
-                                        (//.*|#.*)
-                                    """#
-                            ),
-                            formattingRules: [
-                                TextFormattingRule(key: .foregroundColor, value: NSColor.gray)
-                            ]
-                        ),
+                                //=====================================================
+                                // 5) Numeric literals
+                                //=====================================================
+                                HighlightRule(
+                                    pattern: try! NSRegularExpression(
+                                        pattern: #"""
+                                                (?<!\w)\d+(?:\.\d+)?(?!\w)
+                                            """#
+                                    ),
+                                    formattingRules: [
+                                        TextFormattingRule(
+                                            key: .foregroundColor, value: NSColor.systemBlue)
+                                    ]
+                                ),
 
-                        //=====================================================
-                        // 8) Multi-line comments (/* ... */)
-                        //    - Common in C, C++, Java, JavaScript
-                        //    - We use a DOTALL-like approach to match across lines
-                        //=====================================================
-                        HighlightRule(
-                            pattern: try! NSRegularExpression(
-                                // (?s) allows dot to match newlines (in many regex engines).
-                                // But in NSRegularExpression, we approximate with [\s\S].
-                                pattern: #"""
-                                        /\*[\s\S]*?\*/
-                                    """#,
-                                options: []
-                            ),
-                            formattingRules: [
-                                TextFormattingRule(key: .foregroundColor, value: NSColor.darkGray)
+                                //=====================================================
+                                // 6) String literals ("double quoted")
+                                //    If you want single quotes too, add pattern for '[^']*'
+                                //=====================================================
+                                HighlightRule(
+                                    pattern: try! NSRegularExpression(
+                                        pattern: #"""
+                                                "[^"]*"
+                                            """#
+                                    ),
+                                    formattingRules: [
+                                        TextFormattingRule(
+                                            key: .foregroundColor, value: NSColor.systemGreen)
+                                    ]
+                                ),
+
+                                //=====================================================
+                                // 7) Single-line comments (// or #)
+                                //    - Many C-like languages use //
+                                //    - Python uses #
+                                //=====================================================
+                                HighlightRule(
+                                    pattern: try! NSRegularExpression(
+                                        pattern: #"""
+                                                (//.*|#.*)
+                                            """#
+                                    ),
+                                    formattingRules: [
+                                        TextFormattingRule(
+                                            key: .foregroundColor, value: NSColor.gray)
+                                    ]
+                                ),
+
+                                //=====================================================
+                                // 8) Multi-line comments (/* ... */)
+                                //    - Common in C, C++, Java, JavaScript
+                                //    - We use a DOTALL-like approach to match across lines
+                                //=====================================================
+                                HighlightRule(
+                                    pattern: try! NSRegularExpression(
+                                        // (?s) allows dot to match newlines (in many regex engines).
+                                        // But in NSRegularExpression, we approximate with [\s\S].
+                                        pattern: #"""
+                                                /\*[\s\S]*?\*/
+                                            """#,
+                                        options: []
+                                    ),
+                                    formattingRules: [
+                                        TextFormattingRule(
+                                            key: .foregroundColor, value: NSColor.darkGray)
+                                    ]
+                                ),
                             ]
                         )
-                        ]
-                    )
-                    .frame(height: CGFloat(code.components(separatedBy: .newlines).count) * 20)
-                    .padding(.all, 0)
+                        .frame(height: CGFloat(code.components(separatedBy: .newlines).count) * 20)
+                    }
+                    .border(Color.gray.opacity(0.2), width: 1)
+                    .cornerRadius(10)
+
                     if !afterCode.isEmpty {
                         Text(.init(convertStringToMarkdown(message: afterCode)))
                             .textSelection(.enabled)
                     }
                 }
+
             } else {
                 Text(.init(convertStringToMarkdown(message: message.text)))
                     .frame(minHeight: 40)
@@ -483,8 +515,6 @@ struct ContentView: View {
                         print("Conversation is too old")
                     } else {
                         print("Conversation is new")
-                        print("Conversation content: \(content)")
-                        print("Conversation id: \(String(describing: conversationId))")
                     }
 
                 }
@@ -541,10 +571,6 @@ struct ContentView: View {
                         if author?.role != "system" && messageId != nil
                             && !messageIds.contains(messageId ?? "") && content != nil
                         {
-                            print(
-                                "\(String(describing: messageId)), \(String(describing: author))  \(String(describing: content))"
-                            )
-
                             let isUser = author?.role == "user"
                             if case .string(let messageText) = content {
                                 messages.insert(

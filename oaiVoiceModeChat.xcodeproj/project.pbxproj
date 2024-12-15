@@ -29,7 +29,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		E75A19C02CFDCE6F00F8F75D /* oaiVoiceModeChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = oaiVoiceModeChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E75A19C02CFDCE6F00F8F75D /* ChatGPT: Voice Mode Chat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ChatGPT: Voice Mode Chat.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E75A19D12CFDCE7100F8F75D /* oaiVoiceModeChatTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = oaiVoiceModeChatTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E75A19DB2CFDCE7100F8F75D /* oaiVoiceModeChatUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = oaiVoiceModeChatUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E75A1A0C2CFDF82C00F8F75D /* .env */ = {isa = PBXFileReference; lastKnownFileType = text; path = .env; sourceTree = "<group>"; };
@@ -106,7 +106,7 @@
 		E75A19C12CFDCE6F00F8F75D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E75A19C02CFDCE6F00F8F75D /* oaiVoiceModeChat.app */,
+				E75A19C02CFDCE6F00F8F75D /* ChatGPT: Voice Mode Chat.app */,
 				E75A19D12CFDCE7100F8F75D /* oaiVoiceModeChatTests.xctest */,
 				E75A19DB2CFDCE7100F8F75D /* oaiVoiceModeChatUITests.xctest */,
 			);
@@ -136,7 +136,7 @@
 				E76654362D0D80EA00C242C7 /* HighlightedTextEditor */,
 			);
 			productName = oaiVoiceModeChat;
-			productReference = E75A19C02CFDCE6F00F8F75D /* oaiVoiceModeChat.app */;
+			productReference = E75A19C02CFDCE6F00F8F75D /* ChatGPT: Voice Mode Chat.app */;
 			productType = "com.apple.product-type.application";
 		};
 		E75A19D02CFDCE7100F8F75D /* oaiVoiceModeChatTests */ = {
@@ -440,7 +440,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 0.42;
 				PRODUCT_BUNDLE_IDENTIFIER = com.withoaiVoiceModeChat.mac;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "ChatGPT: Voice Mode Chat";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -473,7 +473,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 0.42;
 				PRODUCT_BUNDLE_IDENTIFIER = com.withoaiVoiceModeChat.mac;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "ChatGPT: Voice Mode Chat";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
