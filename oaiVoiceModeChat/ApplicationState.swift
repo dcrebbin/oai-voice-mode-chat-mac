@@ -37,4 +37,13 @@ struct ApplicationState {
             UserDefaults.standard.set(newValue, forKey: "selectedLanguage")
         }
     }
+
+    static var openAiApiKey: String {
+        get {
+            UserDefaults.standard.string(forKey: "openAiApiKey") ?? ""
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "openAiApiKey")
+        }
+    }
 }

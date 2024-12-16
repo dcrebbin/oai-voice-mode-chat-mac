@@ -5,6 +5,9 @@ struct Settings: View {
     @State private var authToken = ApplicationState.authToken
     @State private var retrievalSpeed = ApplicationState.retrievalSpeed
     @State private var latestConversationCutoff = ApplicationState.latestConversationCutoff
+    @State private var selectedLanguage = ApplicationState.selectedLanguage
+    @State private var openAiApiKey = ApplicationState.openAiApiKey
+
     var body: some View {
 
         var version =
@@ -24,6 +27,31 @@ struct Settings: View {
                             ApplicationState.authToken = authToken
                             UserDefaults.standard.set(authToken, forKey: "authToken")
                         }
+                }
+                Text("OpenAI API Key (for Chinese learning)").bold().font(.system(size: 12))
+                    .padding(.leading, 10)
+                    .padding(
+                        .top, 10)
+                HStack {
+                    SecureField("", text: $openAiApiKey)
+                        .padding(.horizontal, 10)
+                        .textFieldStyle(.roundedBorder)
+                        .onChange(of: openAiApiKey) {
+                            ApplicationState.openAiApiKey = openAiApiKey
+                            UserDefaults.standard.set(openAiApiKey, forKey: "openAiApiKey")
+                        }
+                }
+                //selector
+                Picker("Language", selection: $selectedLanguage) {
+                    Text("English").tag("en")
+                    Text("Mandarin").tag("zh_CN")
+                    Text("Cantonese").tag("zh_HK")
+                }
+                .pickerStyle(.menu)
+                .padding(.horizontal, 10)
+                .onChange(of: selectedLanguage) {
+                    ApplicationState.selectedLanguage = selectedLanguage
+                    UserDefaults.standard.set(selectedLanguage, forKey: "selectedLanguage")
                 }
                 Text("Retrieval Speed").bold().font(.system(size: 12)).padding(.leading, 10)
                 Text(

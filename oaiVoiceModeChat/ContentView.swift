@@ -11,7 +11,12 @@ struct AppMessage {
 }
 
 struct ContentView: View {
-    @State private var messages: [AppMessage] = []
+    @State private var messages: [AppMessage] = [
+        AppMessage(text: "你好", isUser: true, id: "1", createTime: 1_718_515_200),
+        AppMessage(
+            text: "你好，我是OpenAI的ChatGPT。有什么我可以帮助你的吗？", isUser: false, id: "2",
+            createTime: 1_718_515_700),
+    ]
     @State private var isListening: Bool = false
     @State private var messageIds: [String] = []
     @State private var conversationId: String = ""
@@ -20,14 +25,42 @@ struct ContentView: View {
     @State private var errorText: String?
 
     func userMessage(message: AppMessage) -> some View {
-        VStack(alignment: .trailing, spacing: 2) {
-            Text(message.text)
-                .font(.system(size: 14))
-                .padding(.horizontal, 13)
-                .padding(.vertical, 8)
-                .background(Color.gray.opacity(0.2))
-                .cornerRadius(20)
-                .textSelection(.enabled)
+        let containsChinese =
+            message.text.range(
+                of: "[\u{4E00}-\u{9FA5}]", options: .regularExpression
+            )
+
+        return VStack(alignment: .trailing, spacing: 2) {
+            if containsChinese != nil {
+                FlowLayout(spacing: 4) {
+                    ForEach(
+                        Transliteration.transliterate(message: message.text), id: \.self
+                    ) { char in
+                        VStack(alignment: .center, spacing: 2) {
+                            if let pinyin = char["pinyin"], pinyin != "" {
+                                Text(pinyin)
+                                    .font(.caption)
+                            }
+                            if let char = char["char"], char != "" {
+                                Text(char)
+                                    .font(.title2)
+                            }
+                        }
+                        .frame(minWidth: 40, maxWidth: .infinity, minHeight: 40)
+                        .padding(.all, 2)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(10)
+                    }
+                }
+            } else {
+                Text(message.text)
+                    .font(.system(size: 14))
+                    .padding(.horizontal, 13)
+                    .padding(.vertical, 8)
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(20)
+                    .textSelection(.enabled)
+            }
         }
         .frame(minWidth: 40, maxWidth: .infinity, minHeight: 40, alignment: .trailing)
     }
@@ -42,6 +75,11 @@ struct ContentView: View {
                 .overlay(Circle().stroke(Color.white.opacity(0.5), lineWidth: 2))
                 .clipShape(Circle())
 
+            let containsChinese =
+                message.text.range(
+                    of: "[\u{4E00}-\u{9FA5}]", options: .regularExpression
+                )
+
             if let codeBlockRange = message.text.range(
                 of: "```[\\s\\S]*?```", options: .regularExpression)
             {
@@ -50,9 +88,33 @@ struct ContentView: View {
                 let afterCode = String(message.text[codeBlockRange.upperBound...])
 
                 VStack(alignment: .leading) {
+
                     if !beforeCode.isEmpty {
-                        Text(.init(Constants.convertStringToMarkdown(message: beforeCode)))
-                            .textSelection(.enabled).font(.system(size: 14))
+                        if containsChinese != nil {
+                            FlowLayout(spacing: 4) {
+                                ForEach(
+                                    Transliteration.transliterate(message: beforeCode), id: \.self
+                                ) { char in
+                                    VStack(alignment: .center, spacing: 2) {
+                                        if let pinyin = char["pinyin"], pinyin != "" {
+                                            Text(pinyin)
+                                                .font(.caption)
+                                        }
+                                        if let char = char["char"], char != "" {
+                                            Text(char)
+                                                .font(.title2)
+                                        }
+                                    }
+                                    .frame(minWidth: 40, maxWidth: .infinity, minHeight: 40)
+                                    .padding(.all, 2)
+                                    .background(Color.gray.opacity(0.2))
+                                    .cornerRadius(10)
+                                }
+                            }
+                        } else {
+                            Text(.init(Constants.convertStringToMarkdown(message: beforeCode)))
+                                .textSelection(.enabled).font(.system(size: 14))
+                        }
                     }
 
                     let language = code.components(separatedBy: "\n")[0].replacingOccurrences(
@@ -92,18 +154,52 @@ struct ContentView: View {
                     .cornerRadius(10)
 
                     if !afterCode.isEmpty {
-                        Text(.init(Constants.convertStringToMarkdown(message: afterCode)))
-                            .textSelection(.enabled).font(.system(size: 14))
+                        if containsChinese != nil {
+                            FlowLayout(spacing: 4) {
+                                ForEach(
+                                    Transliteration.transliterate(message: afterCode), id: \.self
+                                ) { char in
+                                    Text(char["char"] ?? "")
+                                        .font(.system(size: 14))
+                                }
+                            }
+                        } else {
+                            Text(.init(Constants.convertStringToMarkdown(message: afterCode)))
+                                .textSelection(.enabled).font(.system(size: 14))
+                        }
                     }
                 }
 
             } else {
-                Text(.init(Constants.convertStringToMarkdown(message: message.text)))
-                    .font(.system(size: 14))
-                    .frame(minHeight: 40)
-                    .padding(.horizontal, 13)
-                    .padding(.vertical, 8)
-                    .textSelection(.enabled)
+                if containsChinese != nil {
+                    FlowLayout(spacing: 4) {
+                        ForEach(
+                            Transliteration.transliterate(message: message.text), id: \.self
+                        ) { char in
+                            VStack(alignment: .center, spacing: 2) {
+                                if let pinyin = char["pinyin"], pinyin != "" {
+                                    Text(pinyin)
+                                        .font(.caption)
+                                }
+                                if let char = char["char"], char != "" {
+                                    Text(char)
+                                        .font(.title2)
+                                }
+                            }
+                            .frame(minWidth: 40, maxWidth: .infinity, minHeight: 40)
+                            .padding(.all, 2)
+                            .background(Color.gray.opacity(0.2))
+                            .cornerRadius(10)
+                        }
+                    }
+                } else {
+                    Text(.init(Constants.convertStringToMarkdown(message: message.text)))
+                        .font(.system(size: 14))
+                        .frame(minHeight: 40)
+                        .padding(.horizontal, 13)
+                        .padding(.vertical, 8)
+                        .textSelection(.enabled)
+                }
             }
 
         }
