@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var conversationId: String = ""
     @State private var conversationTitle: String = ""
     @State private var scrollProxy: ScrollViewProxy?
+    @State private var errorText: String?
     @State private var latestConversationCutoff: Double =
         UserDefaults.standard.double(forKey: "latestConversationCutoff") ?? 30
     @State private var retrievalSpeed: Double =
@@ -115,6 +116,7 @@ struct ContentView: View {
 
     func toggleListening() {
         isListening.toggle()
+
         if isListening {
             startListening()
         } else {
@@ -126,19 +128,35 @@ struct ContentView: View {
 
     func startListening() {
         print("Starting listening")
-        retrieveLatestConversation()
+        isListening = true
+        do {
+            try retrieveLatestConversation()
+        } catch {
+            logError(error: error)
+            return
+        }
 
         timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(retrievalSpeed), repeats: true)
         { _ in
             if conversationId != "" {
                 print("Still retrieving latest messages...")
                 DispatchQueue.main.async {
-                    retrieveMessagesFromConversation()
+                    do {
+                        try retrieveMessagesFromConversation()
+                    } catch {
+                        logError(error: error)
+                        return
+                    }
                 }
             } else {
                 print("Retrieving latest conversation...")
                 DispatchQueue.main.async {
-                    retrieveLatestConversation()
+                    do {
+                        try retrieveLatestConversation()
+                    } catch {
+                        logError(error: error)
+                        return
+                    }
                 }
             }
         }
@@ -146,7 +164,13 @@ struct ContentView: View {
 
     func retrieveLatestConversation() {
         if authToken == "" {
-            print("No OpenAI key found")
+            logError(
+                error: NSError(
+                    domain: "", code: 0,
+                    userInfo: [
+                        NSLocalizedDescriptionKey:
+                            "No OpenAI auth token found: please set one in settings"
+                    ]))
             return
         }
 
@@ -164,7 +188,7 @@ struct ContentView: View {
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data, error == nil else {
-                print("Error: \(error?.localizedDescription ?? "Unknown error")")
+                logError(error: error)
                 return
             }
             do {
@@ -176,13 +200,10 @@ struct ContentView: View {
                     let formatter = ISO8601DateFormatter()
                     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
                     guard let utcTime = formatter.date(from: firstItem.update_time) else {
-                        print("Failed to parse conversation time")
+                        logError(error: error)
                         return
                     }
-
-                    // Both times in UTC for accurate comparison
                     let currentTimeUTC = Date()
-
                     print(currentTimeUTC)
                     print(utcTime)
 
@@ -204,10 +225,20 @@ struct ContentView: View {
                 }
 
             } catch {
-                print("Failed to decode conversation: \(error)")
+                logError(error: error)
+                return
             }
         }
         task.resume()
+    }
+
+    func logError(error: Error?) {
+        print("Error: \(error?.localizedDescription ?? "Unknown error")")
+        errorText = "Error: \(error?.localizedDescription ?? "Unknown error")"
+        stopListening()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            errorText = nil
+        }
     }
 
     func retrieveMessagesFromConversation() {
@@ -279,6 +310,7 @@ struct ContentView: View {
                 }
             } catch {
                 print("Failed to decode conversation: \(error)")
+                return
             }
 
             DispatchQueue.main.async {
@@ -292,6 +324,7 @@ struct ContentView: View {
         print("Stopping listening")
         timer?.invalidate()
         timer = nil
+        isListening = false
     }
 
     var settingsView: some View {
@@ -365,7 +398,8 @@ struct ContentView: View {
                 TabView {
                     VStack(alignment: .leading) {
                         HStack(alignment: .center) {
-                            Text("Retrieve latest conversations").padding(.leading, 10).frame(maxWidth:.infinity)
+                            Text("Retrieve latest conversations").padding(.leading, 10).frame(
+                                maxWidth: .infinity)
                             Button(action: toggleListening) {
                                 Image(
                                     systemName: {
@@ -378,8 +412,8 @@ struct ContentView: View {
                                 )
                                 .font(.system(size: 20))
                                 .scaledToFit()
-                                .padding(.all,4)
-                                .padding(.vertical,isListening ? 1:0)
+                                .padding(.all, 4)
+                                .padding(.vertical, isListening ? 1 : 0)
                             }
                             .buttonStyle(.borderless)
                             if !conversationId.isEmpty {
@@ -390,12 +424,12 @@ struct ContentView: View {
                                     conversationId = ""
                                     conversationTitle = ""
                                 }) {
-                                    Image(systemName: "clear")
+                                    Image(systemName: "clear").buttonStyle(.borderless)
                                 }
                             }
                         }
                         .padding(.all, 4)
-                        .background(.gray.opacity(0.1))                        
+                        .background(.gray.opacity(0.1))
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
                                 .stroke(Color.white.opacity(0.5), lineWidth: 1)
@@ -404,7 +438,7 @@ struct ContentView: View {
                         .padding(4)
                         .frame(maxWidth: .infinity, maxHeight: 40)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top,4)
+                        .padding(.top, 4)
                         if !conversationId.isEmpty {
                             VStack(alignment: .leading) {
                                 Text("ID").font(.system(size: 12)).bold()
@@ -452,6 +486,13 @@ struct ContentView: View {
                                     scrollProxy = proxy
                                 }
                             }
+                        }
+                        if let errorText = errorText {
+                            Text(errorText)
+                                .foregroundColor(.red)
+                                .padding(.all, 4)
+                                .frame(maxWidth: .infinity)
+                                .multilineTextAlignment(.center)
                         }
                     }
                     .background(Color(.clear))
