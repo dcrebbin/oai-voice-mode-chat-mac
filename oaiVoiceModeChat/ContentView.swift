@@ -33,7 +33,7 @@ struct ContentView: View {
 
     func oaiMessage(message: AppMessage) -> some View {
         HStack(spacing: 2) {
-            Image(nsImage: NSImage(named: "oai")!)
+            Image(nsImage: NSImage(named: "OAI")!)
                 .resizable()
                 .frame(width: 18, height: 18)
                 .padding(.all, 4)
