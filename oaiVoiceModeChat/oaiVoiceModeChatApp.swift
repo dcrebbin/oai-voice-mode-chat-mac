@@ -1,51 +1,43 @@
 import AppKit
 import SwiftUI
 
-class StatusBarController {
+class StatusBarController: NSObject {
     private var statusItem: NSStatusItem?
 
     @objc func toggleWindow() {
-        print("toggleWindow")
         if NSApp.isActive {
-            print("App is active, hiding")
             NSApp.hide(nil)
         } else {
-            print("App is not active, showing")
             NSApp.unhide(nil)
             NSApp.activate(ignoringOtherApps: true)
-            if let window = NSApp.windows.first {
-                if window.isMiniaturized {
-                    window.deminiaturize(nil)
-                    window.center()
-                }
-                window.makeKeyAndOrderFront(nil)
-                window.level = .floating
-            }
         }
     }
 
     func setupStatusBarItem() {
+        print("setupStatusBarItem")
         statusItem = NSStatusBar.system.statusItem(withLength: 16)
         if let button: NSStatusBarButton = statusItem?.button {
+            print("button: \(button)")
             statusItem?.button?.image = NSImage(named: NSImage.Name("MenuIcon"))
             statusItem?.button?.image?.size = NSSize(width: 18.0, height: 18.0)
             statusItem?.button?.imagePosition = .imageOnly
-
+            button.target = self
             button.action = #selector(toggleWindow)
-            button.sendAction(on: [.leftMouseDown])
+            button.sendAction(on: [.leftMouseDown, .rightMouseDown, .leftMouseUp, .rightMouseUp])
         }
     }
 }
 
 @main
 struct oaiVoiceModeChatApp: App {
-    private let statusBarController = StatusBarController()
+    private var statusBarController = StatusBarController()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .modifier(TranslucentWindowModifier())
                 .onAppear {
+                    print("onAppear 2")
                     statusBarController.setupStatusBarItem()
                 }
         }
@@ -80,20 +72,6 @@ struct KeyCombo {
             case .t: return 0x11
             case .o: return 0x1F
             }
-        }
-    }
-}
-
-extension NSStatusBarButton {
-    func rightMouseDown(handler: @escaping (NSEvent) -> Void) {
-        self.sendAction(on: [.rightMouseDown])
-
-        NSEvent.addLocalMonitorForEvents(matching: [.rightMouseDown]) { event in
-            if event.window == self.window {
-                handler(event)
-                return nil
-            }
-            return event
         }
     }
 }
