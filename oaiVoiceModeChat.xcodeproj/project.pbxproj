@@ -424,7 +424,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"oaiVoiceModeChat/Preview Content\"";
 				DEVELOPMENT_TEAM = V4BA83FLD8;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -439,7 +439,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dcrebbin.voicemode;
 				PRODUCT_NAME = "Voice Mode Chat";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -459,7 +459,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"oaiVoiceModeChat/Preview Content\"";
 				DEVELOPMENT_TEAM = V4BA83FLD8;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -474,7 +474,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dcrebbin.voicemode;
 				PRODUCT_NAME = "Voice Mode Chat";
 				PROVISIONING_PROFILE_SPECIFIER = "";
