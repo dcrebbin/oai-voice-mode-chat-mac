@@ -8,9 +8,16 @@ Adds realtime chat for voice mode to allow you to copy code and read what was sa
 
 Video Demo: https://www.youtube.com/watch?v=0gRkIgAmMEU
 
-![Example](/example.png)
+Voice Mode
+
+![Example](/example-1.png)
+
+Standard Chat
+
+![Example](/example-2.png)
 
 Other platforms:
+
 - Vscode Extension: https://github.com/dcrebbin/real-time-voice-chat-vscode (Unfinished)
 - Chrome Extension: https://github.com/dcrebbin/voice-mode-real-time-chat-extension
 
@@ -37,7 +44,7 @@ NOTE: this isn't just your OpenAI API key: this is your user auth token which is
 3. Find the request to: https://chatgpt.com/backend-api/conversations
 4. Head to the Settings tab
 5. Copy & paste the Authorization header value without "Bearer" (eyJhbGci...) into the auth token field
-   
-(v0.1.0-alpha bug: ensure both settings sliders are above 0 before using it) 
+
+(v0.1.0-alpha bug: ensure both settings sliders are above 0 before using it)
 
 ![Auth Token Tutorial](/oaiVoiceModeChat/Assets.xcassets/AuthTokenTutorial.imageset/auth-token-tutorial.png)

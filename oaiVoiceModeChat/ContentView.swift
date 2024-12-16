@@ -320,6 +320,9 @@ struct ContentView: View {
         isListening = false
     }
 
+    @State private var isHoveringClearButton: Bool = false
+    @State private var isHoveringRetrieveLatestChatButton: Bool = false
+
     var body: some View {
         ZStack(alignment: .top) {
             TranslucentView(material: .hudWindow)
@@ -345,6 +348,19 @@ struct ContentView: View {
                                 .padding(.all, 4)
                                 .padding(.vertical, isListening ? 1 : 0)
                             }
+                            .background(
+                                isHoveringRetrieveLatestChatButton
+                                    ? Color.gray.opacity(0.2) : Color.clear
+                            )
+                            .cornerRadius(8)
+                            .onHover { hovering in
+                                if hovering {
+                                    isHoveringRetrieveLatestChatButton = true
+                                } else {
+                                    isHoveringRetrieveLatestChatButton = false
+                                }
+                            }
+
                             .buttonStyle(.borderless)
                             if !conversationId.isEmpty {
                                 Text("Clear")
@@ -357,12 +373,24 @@ struct ContentView: View {
                                     Image(systemName: "trash").font(.system(size: 20))
                                         .scaledToFit()
                                         .padding(.all, 4)
-                                }.buttonStyle(.borderless)
+                                }.onHover { hovering in
+                                    if hovering {
+                                        isHoveringClearButton = true
+                                    } else {
+                                        isHoveringClearButton = false
+                                    }
+                                }
+                                .background(
+                                    isHoveringClearButton
+                                        ? Color.gray.opacity(0.2) : Color.clear
+                                )
+                                .buttonStyle(.borderless)
                             }
                         }.frame(
-                            maxWidth: .infinity
+                            maxWidth: .infinity,
+                            minHeight: 40
                         )
-                        .padding(.all, 2)
+                        .padding(.all, 4)
                         .background(.gray.opacity(0.1))
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
