@@ -6,8 +6,14 @@ struct Settings: View {
     @State private var retrievalSpeed = ApplicationState.retrievalSpeed
     @State private var latestConversationCutoff = ApplicationState.latestConversationCutoff
     var body: some View {
+
+        var version =
+            Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
+
         ScrollView {
             VStack(alignment: .leading) {
+                Text("Voice Mode Chat for Mac v" + version).padding(.leading, 10).padding(.top, 10)
+                Divider()
                 Text("Auth Token*").bold().font(.system(size: 12)).padding(.leading, 10).padding(
                     .top, 10)
                 HStack {

@@ -14,7 +14,6 @@ class StatusBarController: NSObject {
     }
 
     func setupStatusBarItem() {
-        print("setupStatusBarItem")
         statusItem = NSStatusBar.system.statusItem(withLength: 16)
         if let button: NSStatusBarButton = statusItem?.button {
             print("button: \(button)")
@@ -37,7 +36,6 @@ struct oaiVoiceModeChatApp: App {
             ContentView()
                 .modifier(TranslucentWindowModifier())
                 .onAppear {
-                    print("onAppear 2")
                     statusBarController.setupStatusBarItem()
                 }
         }
@@ -56,22 +54,5 @@ struct WindowAccessor: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: NSView, context: Context) {
-    }
-}
-
-struct KeyCombo {
-    let key: Key
-    let modifiers: NSEvent.ModifierFlags
-
-    enum Key {
-        case t
-        case o
-
-        var carbonKeyCode: UInt16 {
-            switch self {
-            case .t: return 0x11
-            case .o: return 0x1F
-            }
-        }
     }
 }

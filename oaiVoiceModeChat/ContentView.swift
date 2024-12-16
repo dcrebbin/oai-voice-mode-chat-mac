@@ -22,11 +22,12 @@ struct ContentView: View {
     func userMessage(message: AppMessage) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
             Text(message.text)
-                .font(.system(size: 16))
+                .font(.system(size: 14))
                 .padding(.horizontal, 13)
                 .padding(.vertical, 8)
                 .background(Color.gray.opacity(0.2))
                 .cornerRadius(20)
+                .textSelection(.enabled)
         }
         .frame(minWidth: 40, maxWidth: .infinity, minHeight: 40, alignment: .trailing)
     }
@@ -51,7 +52,7 @@ struct ContentView: View {
                 VStack(alignment: .leading) {
                     if !beforeCode.isEmpty {
                         Text(.init(Constants.convertStringToMarkdown(message: beforeCode)))
-                            .textSelection(.enabled)
+                            .textSelection(.enabled).font(.system(size: 14))
                     }
 
                     let language = code.components(separatedBy: "\n")[0].replacingOccurrences(
@@ -92,12 +93,13 @@ struct ContentView: View {
 
                     if !afterCode.isEmpty {
                         Text(.init(Constants.convertStringToMarkdown(message: afterCode)))
-                            .textSelection(.enabled)
+                            .textSelection(.enabled).font(.system(size: 14))
                     }
                 }
 
             } else {
                 Text(.init(Constants.convertStringToMarkdown(message: message.text)))
+                    .font(.system(size: 14))
                     .frame(minHeight: 40)
                     .padding(.horizontal, 13)
                     .padding(.vertical, 8)
@@ -369,14 +371,15 @@ struct ContentView: View {
                         .cornerRadius(10)
                         .frame(maxWidth: .infinity, maxHeight: 40)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.all, 10)
+                        .padding(.top, 10)
+                        .padding(.horizontal, 10)
                         if !conversationId.isEmpty {
                             VStack(alignment: .leading) {
                                 Text("ID").font(.system(size: 12)).bold()
-                                Text(conversationId).padding(.bottom, 4)
+                                Text(conversationId).padding(.bottom, 2).textSelection(.enabled)
                                 Text("Title").font(.system(size: 12)).bold()
-                                Text(conversationTitle)
-                            }.padding(.all, 4)
+                                Text(conversationTitle).textSelection(.enabled)
+                            }.padding(.all, 2)
                             Divider()
                         }
                         ScrollView {
@@ -385,7 +388,7 @@ struct ContentView: View {
                                     if messages.isEmpty {
                                         if isListening {
                                             Text(
-                                                "Searching for chats created in the last \(ApplicationState.latestConversationCutoff) seconds..."
+                                                "Searching for chats created in the last \(Int(ApplicationState.latestConversationCutoff)) seconds..."
                                             )
                                             .multilineTextAlignment(.center)
                                             .frame(maxWidth: .infinity, alignment: .center)
