@@ -12,18 +12,12 @@ struct AppMessage {
 
 struct ContentView: View {
     @State private var messages: [AppMessage] = []
-    @State private var authToken: String =
-        UserDefaults.standard.string(forKey: "authToken") ?? ""
     @State private var isListening: Bool = false
     @State private var messageIds: [String] = []
     @State private var conversationId: String = ""
     @State private var conversationTitle: String = ""
     @State private var scrollProxy: ScrollViewProxy?
     @State private var errorText: String?
-    @State private var latestConversationCutoff: Double =
-        UserDefaults.standard.double(forKey: "latestConversationCutoff") ?? 30
-    @State private var retrievalSpeed: Double =
-        UserDefaults.standard.double(forKey: "retrievalSpeed") ?? 3
 
     func userMessage(message: AppMessage) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
@@ -136,8 +130,9 @@ struct ContentView: View {
             return
         }
 
-        timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(retrievalSpeed), repeats: true)
-        { _ in
+        timer = Timer.scheduledTimer(
+            withTimeInterval: TimeInterval(ApplicationState.retrievalSpeed), repeats: true
+        ) { _ in
             if conversationId != "" {
                 print("Still retrieving latest messages...")
                 DispatchQueue.main.async {
@@ -163,7 +158,7 @@ struct ContentView: View {
     }
 
     func retrieveLatestConversation() {
-        if authToken == "" {
+        if ApplicationState.authToken == "" {
             logError(
                 error: NSError(
                     domain: "", code: 0,
@@ -179,7 +174,7 @@ struct ContentView: View {
 
         let headers = [
             "Content-Type": "application/json",
-            "Authorization": "Bearer \(authToken)",
+            "Authorization": "Bearer \(ApplicationState.authToken)",
         ]
 
         var request = URLRequest(url: url)
@@ -190,6 +185,15 @@ struct ContentView: View {
             guard let data = data, error == nil else {
                 logError(error: error)
                 return
+            }
+            if let httpResponse = response as? HTTPURLResponse {
+                if httpResponse.statusCode == 401 {
+                    logError(
+                        error: NSError(
+                            domain: "", code: 0,
+                            userInfo: [NSLocalizedDescriptionKey: "Unauthorized"]))
+                    return
+                }
             }
             do {
                 let decoder = JSONDecoder()
@@ -212,7 +216,8 @@ struct ContentView: View {
                     )
 
                     print(firstItem.title)
-                    if currentTimeUTC.timeIntervalSince(utcTime) > Double(latestConversationCutoff)
+                    if currentTimeUTC.timeIntervalSince(utcTime)
+                        > ApplicationState.latestConversationCutoff
                     {
                         print("Conversation is too old")
                     } else {
@@ -242,7 +247,7 @@ struct ContentView: View {
     }
 
     func retrieveMessagesFromConversation() {
-        if authToken == "" {
+        if ApplicationState.authToken == "" {
             print("No OpenAI key found")
             return
         }
@@ -254,7 +259,7 @@ struct ContentView: View {
 
         let headers = [
             "Content-Type": "application/json",
-            "Authorization": "Bearer \(authToken)",
+            "Authorization": "Bearer \(ApplicationState.authToken)",
         ]
 
         var request = URLRequest(url: url)
@@ -263,12 +268,15 @@ struct ContentView: View {
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data, error == nil else {
-                print("Error: \(error?.localizedDescription ?? "Unknown error")")
+                logError(error: error)
                 return
             }
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode == 401 {
-                    print("Unauthorized")
+                    logError(
+                        error: NSError(
+                            domain: "", code: 0,
+                            userInfo: [NSLocalizedDescriptionKey: "Unauthorized"]))
                     return
                 }
             }
@@ -325,68 +333,6 @@ struct ContentView: View {
         timer?.invalidate()
         timer = nil
         isListening = false
-    }
-
-    var settingsView: some View {
-        ScrollView {
-            VStack(alignment: .leading) {
-                Text("Auth Token*").bold().font(.system(size: 12)).padding(.leading, 10).padding(
-                    .top, 10)
-                HStack {
-                    SecureField("", text: $authToken)
-                        .padding(.horizontal, 10)
-                        .textFieldStyle(.roundedBorder)
-                }
-                Text("Retrieval Speed").bold().font(.system(size: 12)).padding(.leading, 10)
-                Text(
-                    "This is the speed at which the app will check for new messages in the conversation. Lower values will check more frequently: used for rate limiting mitigation."
-                ).font(.system(size: 10)).padding(.leading, 10).textSelection(.enabled)
-                HStack {
-                    Slider(value: $retrievalSpeed, in: 0.25...10, step: 0.25)
-                        .onChange(of: retrievalSpeed) {
-                            UserDefaults.standard.set(retrievalSpeed, forKey: "retrievalSpeed")
-                        }
-                        .padding(.horizontal, 10)
-                    Text(String(format: "%.2f", retrievalSpeed) + "s")
-                }
-                Text("Latest Conversation Cutoff").bold().font(.system(size: 12)).padding(
-                    .leading, 10)
-                Text(
-                    "This is the cutoff time for a conversation to be considered 'new'. Lower values will ensure newer conversations are retrieved and older conversations will be ignored."
-                ).padding(.leading, 10).font(.system(size: 10)).textSelection(.enabled)
-                HStack {
-                    Slider(value: $latestConversationCutoff, in: 1...300)
-                        .padding(.horizontal, 10)
-                        .onChange(of: latestConversationCutoff) {
-                            UserDefaults.standard.set(
-                                latestConversationCutoff, forKey: "latestConversationCutoff")
-                        }
-                    Text(String(format: "%.2f", latestConversationCutoff) + "s")
-                }
-                Text("*Auth Token Tutorial").bold().padding(.top, 10).padding(.leading, 10)
-                Text(
-                    "Note: this isn't just your OpenAI API key: this is your user auth token which is used to perform elevated actions for your account (dangerous)."
-                ).font(.system(size: 10)).padding(.leading, 10).textSelection(.enabled)
-                Spacer()
-                Text("1. (Whilst logged in) head to: https://chatgpt.com").padding(.leading, 10)
-                    .textSelection(.enabled)
-                Text("2. Open your browser's developer tools and view the Network tab").padding(
-                    .leading, 10
-                ).textSelection(.enabled)
-                Text("3. Find the request to: https://chatgpt.com/backend-api/conversations")
-                    .padding(.leading, 10).textSelection(.enabled)
-                Text(
-                    "4. Copy & paste the Authorization header value (eyJhbGci...) into the field above"
-                ).padding(.leading, 10).textSelection(.enabled)
-                Image("AuthTokenTutorial")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: 700, alignment: .center)
-                    .padding(.leading, 10)
-                Spacer()
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
     var body: some View {
@@ -499,7 +445,7 @@ struct ContentView: View {
                     .tabItem {
                         Label("Conversation", systemImage: "message")
                     }
-                    settingsView.tabItem {
+                    Settings().tabItem {
                         Label("Settings", systemImage: "gear")
                     }
                 }.tabViewStyle(.sidebarAdaptable).frame(maxWidth: .infinity, maxHeight: .infinity)
