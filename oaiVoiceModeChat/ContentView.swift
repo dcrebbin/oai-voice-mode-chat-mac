@@ -8,6 +8,7 @@ struct AppMessage {
     let isUser: Bool
     let id: String
     let createTime: Double?
+    var translation: String?
 }
 
 struct ContentView: View {
@@ -56,16 +57,11 @@ struct ContentView: View {
                     .cornerRadius(20)
                     .textSelection(.enabled)
             }
-            let translation = OpenAI().callCompletionsAPI(message: message.text)
-            if !translation.isEmpty {
-                Text(translation).font(.system(size: 14))
-                    .frame(minHeight: 40)
-                    .padding(.horizontal, 13)
-                    .padding(.vertical, 8)
-                    .textSelection(.enabled)
-            }
+            @State var hasCalledAPI = false
+
         }
         .frame(minWidth: 40, maxWidth: .infinity, minHeight: 40, alignment: .trailing)
+
     }
 
     func oaiMessage(message: AppMessage) -> some View {
@@ -210,14 +206,33 @@ struct ContentView: View {
                     }
                 }
             }.frame(minWidth: 40, maxWidth: .infinity, minHeight: 40, alignment: .leading)
-            let translation = OpenAI().callCompletionsAPI(message: message.text)
-            if !translation.isEmpty {
+            VStack {
+                var translation = message.translation ?? "loading..."
                 Text(translation).font(.system(size: 14))
                     .frame(minHeight: 40)
                     .padding(.horizontal, 13)
                     .padding(.vertical, 8)
                     .textSelection(.enabled)
                     .padding(.leading, 13)
+                    .onAppear {
+                        if message.translation == "loading..." {
+                            print("Loading translation")
+                            Task {
+                                let translation =
+                                    await OpenAI.callCompletionsAPI(
+                                        message: message.text)
+                                if let index = messages.firstIndex(
+                                    where: {
+                                        $0.id == message.id
+                                    })
+                                {
+                                    messages[index].translation =
+                                        translation
+                                    print("Translation loaded")
+                                }
+                            }
+                        }
+                    }
             }
         }
         .frame(minWidth: 40, maxWidth: .infinity, minHeight: 40, alignment: .leading)
@@ -399,7 +414,8 @@ struct ContentView: View {
                                 messages.insert(
                                     AppMessage(
                                         text: messageText, isUser: isUser, id: messageId ?? "",
-                                        createTime: value.message?.create_time),
+                                        createTime: value.message?.create_time,
+                                        translation: "loading..."),
                                     at: 0)
                             }
                             if case .contentPart(let contentPart) = content {
@@ -407,7 +423,8 @@ struct ContentView: View {
                                 messages.insert(
                                     AppMessage(
                                         text: text, isUser: isUser, id: messageId ?? "",
-                                        createTime: value.message?.create_time),
+                                        createTime: value.message?.create_time,
+                                        translation: "loading..."),
                                     at: 0)
                             }
                             messageIds.append(messageId ?? "")
@@ -526,7 +543,7 @@ struct ContentView: View {
                         }
                         ScrollView {
                             ScrollViewReader { proxy in
-                                LazyVStack {
+                                VStack {
                                     if messages.isEmpty {
                                         if isListening {
                                             Text(
@@ -548,7 +565,34 @@ struct ContentView: View {
                                         id: \.text
                                     ) { message in
                                         if message.isUser {
-                                            userMessage(message: message)
+                                            VStack {
+                                                userMessage(message: message)
+                                                Text(message.translation ?? "loading...").font(
+                                                    .system(size: 14)
+                                                )
+                                                .frame(minHeight: 40)
+                                                .padding(.horizontal, 13)
+                                                .padding(.vertical, 8)
+                                                .textSelection(.enabled).onAppear {
+                                                    if message.translation == "loading..." {
+                                                        print("Loading translation")
+                                                        Task {
+                                                            let translation =
+                                                                await OpenAI.callCompletionsAPI(
+                                                                    message: message.text)
+                                                            if let index = messages.firstIndex(
+                                                                where: {
+                                                                    $0.id == message.id
+                                                                })
+                                                            {
+                                                                messages[index].translation =
+                                                                    translation
+                                                                print("Translation loaded")
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         } else {
                                             oaiMessage(message: message)
                                         }

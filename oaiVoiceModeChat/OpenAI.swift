@@ -2,7 +2,7 @@ import SwiftUI
 
 struct OpenAI {
 
-    func callCompletionsAPI(message: String) -> String {
+    static func callCompletionsAPI(message: String) async -> String {
         if ApplicationState.openAiApiKey == "" {
             print("No OpenAI key found")
             return ""
@@ -32,30 +32,21 @@ struct OpenAI {
         request.allHTTPHeaderFields = headers
         request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
 
-        var translatedContent = ""
-        let semaphore = DispatchSemaphore(value: 0)
-
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            defer { semaphore.signal() }
-
-            guard let data = data, error == nil else {
-                print("Error: \(error?.localizedDescription ?? "Unknown error")")
-                return
-            }
-
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
             if let responseJSON = try? JSONSerialization.jsonObject(with: data, options: []),
                 let responseDict = responseJSON as? [String: Any],
                 let choices = responseDict["choices"] as? [[String: Any]],
                 let message = choices.first?["message"] as? [String: Any],
                 let content = message["content"] as? String
             {
-                translatedContent = content
+                return content
             }
+        } catch {
+            print("Error: \(error.localizedDescription)")
         }
-        task.resume()
 
-        _ = semaphore.wait(timeout: .now() + 10)
-        return translatedContent
+        return ""
     }
 
 }
