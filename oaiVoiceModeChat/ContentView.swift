@@ -123,35 +123,19 @@ struct ContentView: View {
     func startListening() {
         print("Starting listening")
         isListening = true
-        do {
-            try retrieveLatestConversation()
-        } catch {
-            logError(error: error)
-            return
-        }
-
+        retrieveLatestConversation()
         timer = Timer.scheduledTimer(
             withTimeInterval: TimeInterval(ApplicationState.retrievalSpeed), repeats: true
         ) { _ in
             if conversationId != "" {
                 print("Still retrieving latest messages...")
                 DispatchQueue.main.async {
-                    do {
-                        try retrieveMessagesFromConversation()
-                    } catch {
-                        logError(error: error)
-                        return
-                    }
+                    retrieveMessagesFromConversation()
                 }
             } else {
                 print("Retrieving latest conversation...")
                 DispatchQueue.main.async {
-                    do {
-                        try retrieveLatestConversation()
-                    } catch {
-                        logError(error: error)
-                        return
-                    }
+                    retrieveLatestConversation()
                 }
             }
         }
@@ -215,7 +199,6 @@ struct ContentView: View {
                         "Time since last conversation: \(currentTimeUTC.timeIntervalSince(utcTime)) seconds"
                     )
 
-                    print(firstItem.title)
                     if currentTimeUTC.timeIntervalSince(utcTime)
                         > ApplicationState.latestConversationCutoff
                     {
@@ -344,8 +327,7 @@ struct ContentView: View {
                 TabView {
                     VStack(alignment: .leading) {
                         HStack(alignment: .center) {
-                            Text("Retrieve latest conversations").padding(.leading, 10).frame(
-                                maxWidth: .infinity)
+                            Text("Retrieve latest chat").padding(.leading, 10)
                             Button(action: toggleListening) {
                                 Image(
                                     systemName: {
@@ -363,28 +345,31 @@ struct ContentView: View {
                             }
                             .buttonStyle(.borderless)
                             if !conversationId.isEmpty {
-                                Text("Clear Conversation")
+                                Text("Clear")
                                 Button(action: {
                                     print("Clear conversation")
                                     messages = []
                                     conversationId = ""
                                     conversationTitle = ""
                                 }) {
-                                    Image(systemName: "clear").buttonStyle(.borderless)
-                                }
+                                    Image(systemName: "trash").font(.system(size: 20))
+                                        .scaledToFit()
+                                        .padding(.all, 4)
+                                }.buttonStyle(.borderless)
                             }
-                        }
-                        .padding(.all, 4)
+                        }.frame(
+                            maxWidth: .infinity
+                        )
+                        .padding(.all, 2)
                         .background(.gray.opacity(0.1))
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
                                 .stroke(Color.white.opacity(0.5), lineWidth: 1)
                         )
                         .cornerRadius(10)
-                        .padding(4)
                         .frame(maxWidth: .infinity, maxHeight: 40)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 4)
+                        .padding(.all, 10)
                         if !conversationId.isEmpty {
                             VStack(alignment: .leading) {
                                 Text("ID").font(.system(size: 12)).bold()
@@ -400,12 +385,13 @@ struct ContentView: View {
                                     if messages.isEmpty {
                                         if isListening {
                                             Text(
-                                                "Searching for conversations..."
+                                                "Searching for chats created in the last \(ApplicationState.latestConversationCutoff) seconds..."
                                             )
+                                            .multilineTextAlignment(.center)
                                             .frame(maxWidth: .infinity, alignment: .center)
                                             .padding(.all, 4)
                                         } else {
-                                            Text("No conversation selected")
+                                            Text("No chat selected")
                                         }
                                     }
 
