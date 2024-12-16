@@ -1,31 +1,33 @@
 # Realtime Chat for Voice Mode (Mac) [Unofficial]
 
+[Download here](https://github.com/dcrebbin/oai-voice-mode-chat-mac/releases)
+
+**Other platforms:**
+
+- Vscode Extension: https://github.com/dcrebbin/real-time-voice-chat-vscode (Unfinished)
+- Chrome Extension: https://github.com/dcrebbin/voice-mode-real-time-chat-extension
+
 NOTE: This is not a product from or afilitated with [OpenAI](https://openai.com)
 
 Adds realtime chat for voice mode to allow you to copy code and read what was said in real time.
 
 (Which is unsupported within any official Voice Mode experience in ChatGPT: and can only be accessed if you end the call or manually refresh the ChatGPT website)
 
-Video Demo: https://www.youtube.com/watch?v=0gRkIgAmMEU
+**Video Demo:** https://www.youtube.com/watch?v=0gRkIgAmMEU
 
-Voice Mode
+**Voice Mode**
 
-![Example](/example-1.png)
+![Example with voice mode](/example-1.png)
 
-Standard Chat
+**Standard Chat**
 
-![Example](/example-2.png)
-
-Other platforms:
-
-- Vscode Extension: https://github.com/dcrebbin/real-time-voice-chat-vscode (Unfinished)
-- Chrome Extension: https://github.com/dcrebbin/voice-mode-real-time-chat-extension
+![Example with standard chat](/example-2.png)
 
 Xcode: 16.0 (min 15.0)
 
-## Steps:
+## Steps
 
-1. install via the releases tab on Github or by building and running this project with XCode
+1. Install via the releases tab on [Github](https://github.com/dcrebbin/oai-voice-mode-chat-mac/releases) or by building and running this project with XCode
 
 2. Once run: follow the auth token steps below and paste in your auth token (will need to be retrieved quite often) into the settings panel
 
