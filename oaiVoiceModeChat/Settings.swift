@@ -25,7 +25,7 @@ struct Settings: View {
                 ).font(.system(size: 10)).padding(.leading, 10).textSelection(.enabled)
                 HStack {
                     Slider(value: $retrievalSpeed, in: 0.25...10, step: 0.25)
-                        .onChange(of: ApplicationState.retrievalSpeed) {
+                        .onChange(of: retrievalSpeed) {
                             ApplicationState.retrievalSpeed = retrievalSpeed
                             UserDefaults.standard.set(
                                 ApplicationState.retrievalSpeed, forKey: "retrievalSpeed")
@@ -41,7 +41,7 @@ struct Settings: View {
                 HStack {
                     Slider(value: $latestConversationCutoff, in: 1...300)
                         .padding(.horizontal, 10)
-                        .onChange(of: ApplicationState.latestConversationCutoff) {
+                        .onChange(of: latestConversationCutoff) {
                             ApplicationState.latestConversationCutoff = latestConversationCutoff
                             UserDefaults.standard.set(
                                 ApplicationState.latestConversationCutoff,
