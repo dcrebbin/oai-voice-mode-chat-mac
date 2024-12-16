@@ -218,7 +218,7 @@ struct ContentView: View {
                         .onAppear {
                             if message.translation == "loading..." {
                                 print("Loading translation")
-                                Task {
+                                Task { @MainActor in
                                     let translation =
                                         await OpenAI.callCompletionsAPI(
                                             message: message.text)
@@ -579,7 +579,7 @@ struct ContentView: View {
                                                     .textSelection(.enabled).onAppear {
                                                         if message.translation == "loading..." {
                                                             print("Loading translation")
-                                                            Task {
+                                                            Task { @MainActor in
                                                                 let translation =
                                                                     await OpenAI.callCompletionsAPI(
                                                                         message: message.text)
