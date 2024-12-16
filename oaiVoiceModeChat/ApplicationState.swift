@@ -28,4 +28,13 @@ struct ApplicationState {
             UserDefaults.standard.set(newValue, forKey: "latestConversationCutoff")
         }
     }
+
+    static var selectedLanguage: String {
+        get {
+            UserDefaults.standard.string(forKey: "selectedLanguage") ?? "zh_CN"
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "selectedLanguage")
+        }
+    }
 }
