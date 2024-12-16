@@ -206,33 +206,35 @@ struct ContentView: View {
                     }
                 }
             }.frame(minWidth: 40, maxWidth: .infinity, minHeight: 40, alignment: .leading)
-            VStack {
-                var translation = message.translation ?? "loading..."
-                Text(translation).font(.system(size: 14))
-                    .frame(minHeight: 40)
-                    .padding(.horizontal, 13)
-                    .padding(.vertical, 8)
-                    .textSelection(.enabled)
-                    .padding(.leading, 13)
-                    .onAppear {
-                        if message.translation == "loading..." {
-                            print("Loading translation")
-                            Task {
-                                let translation =
-                                    await OpenAI.callCompletionsAPI(
-                                        message: message.text)
-                                if let index = messages.firstIndex(
-                                    where: {
-                                        $0.id == message.id
-                                    })
-                                {
-                                    messages[index].translation =
-                                        translation
-                                    print("Translation loaded")
+            if ApplicationState.selectedLanguage != "en" {
+                VStack {
+                    var translation = message.translation ?? "loading..."
+                    Text(translation).font(.system(size: 14))
+                        .frame(minHeight: 40)
+                        .padding(.horizontal, 13)
+                        .padding(.vertical, 8)
+                        .textSelection(.enabled)
+                        .padding(.leading, 13)
+                        .onAppear {
+                            if message.translation == "loading..." {
+                                print("Loading translation")
+                                Task {
+                                    let translation =
+                                        await OpenAI.callCompletionsAPI(
+                                            message: message.text)
+                                    if let index = messages.firstIndex(
+                                        where: {
+                                            $0.id == message.id
+                                        })
+                                    {
+                                        messages[index].translation =
+                                            translation
+                                        print("Translation loaded")
+                                    }
                                 }
                             }
                         }
-                    }
+                }
             }
         }
         .frame(minWidth: 40, maxWidth: .infinity, minHeight: 40, alignment: .leading)
@@ -567,27 +569,29 @@ struct ContentView: View {
                                         if message.isUser {
                                             VStack {
                                                 userMessage(message: message)
-                                                Text(message.translation ?? "loading...").font(
-                                                    .system(size: 14)
-                                                )
-                                                .frame(minHeight: 40)
-                                                .padding(.horizontal, 13)
-                                                .padding(.vertical, 8)
-                                                .textSelection(.enabled).onAppear {
-                                                    if message.translation == "loading..." {
-                                                        print("Loading translation")
-                                                        Task {
-                                                            let translation =
-                                                                await OpenAI.callCompletionsAPI(
-                                                                    message: message.text)
-                                                            if let index = messages.firstIndex(
-                                                                where: {
-                                                                    $0.id == message.id
-                                                                })
-                                                            {
-                                                                messages[index].translation =
-                                                                    translation
-                                                                print("Translation loaded")
+                                                if ApplicationState.selectedLanguage != "en" {
+                                                    Text(message.translation ?? "loading...").font(
+                                                        .system(size: 14)
+                                                    )
+                                                    .frame(minHeight: 40)
+                                                    .padding(.horizontal, 13)
+                                                    .padding(.vertical, 8)
+                                                    .textSelection(.enabled).onAppear {
+                                                        if message.translation == "loading..." {
+                                                            print("Loading translation")
+                                                            Task {
+                                                                let translation =
+                                                                    await OpenAI.callCompletionsAPI(
+                                                                        message: message.text)
+                                                                if let index = messages.firstIndex(
+                                                                    where: {
+                                                                        $0.id == message.id
+                                                                    })
+                                                                {
+                                                                    messages[index].translation =
+                                                                        translation
+                                                                    print("Translation loaded")
+                                                                }
                                                             }
                                                         }
                                                     }
