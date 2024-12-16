@@ -31,7 +31,7 @@ struct Settings: View {
                                 ApplicationState.retrievalSpeed, forKey: "retrievalSpeed")
                         }
                         .padding(.horizontal, 10)
-                    Text(String(format: "%.2f", ApplicationState.retrievalSpeed) + "s")
+                    Text(String(format: "%.2f", retrievalSpeed) + "s")
                 }
                 Text("Latest Conversation Cutoff").bold().font(.system(size: 12)).padding(
                     .leading, 10)
@@ -47,7 +47,7 @@ struct Settings: View {
                                 ApplicationState.latestConversationCutoff,
                                 forKey: "latestConversationCutoff")
                         }
-                    Text(String(format: "%.2f", ApplicationState.latestConversationCutoff) + "s")
+                    Text(String(format: "%.2f", latestConversationCutoff) + "s")
                 }
                 Text("*Auth Token Tutorial").bold().padding(.top, 10).padding(.leading, 10)
                 Text(
