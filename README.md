@@ -1,6 +1,6 @@
-# Realtime Chat for Voice Mode (Mac) [Unofficial]
+# Realtime Chat for Voice Mode (Windows) [Unofficial]
 
-[Download here](https://github.com/dcrebbin/oai-voice-mode-chat-mac/releases)
+[Download here](https://github.com/dcrebbin/oai-voice-mode-chat-windows/releases)
 
 **Other platforms:**
 
@@ -23,11 +23,9 @@ Adds realtime chat for voice mode to allow you to copy code and read what was sa
 
 ![Example with standard chat](/example-2.png)
 
-Xcode: 16.0 (min 15.0)
-
 ## Steps
 
-1. Install via the releases tab on [Github](https://github.com/dcrebbin/oai-voice-mode-chat-mac/releases) or by building and running this project with XCode
+1. Install via the releases tab on [Github](https://github.com/dcrebbin/oai-voice-mode-chat-windows/releases) or by running the Python script
 
 2. Once run: follow the auth token steps below and paste in your auth token (will need to be retrieved quite often) into the settings panel
 
@@ -50,3 +48,14 @@ NOTE: this isn't just your OpenAI API key: this is your user auth token which is
 (v0.1.0-alpha bug: ensure both settings sliders are above 0 before using it)
 
 ![Auth Token Tutorial](/oaiVoiceModeChat/Assets.xcassets/AuthTokenTutorial.imageset/auth-token-tutorial.png)
+
+### Setting up the Python environment on Windows
+
+1. Install Python from the official website: https://www.python.org/downloads/
+2. Clone the repository: `git clone https://github.com/dcrebbin/oai-voice-mode-chat-windows.git`
+3. Navigate to the project directory: `cd oai-voice-mode-chat-windows`
+4. Create a virtual environment: `python -m venv venv`
+5. Activate the virtual environment:
+   - On Windows: `venv\Scripts\activate`
+6. Install the required dependencies: `pip install -r requirements.txt`
+7. Run the application: `python main.py`
